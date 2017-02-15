@@ -13,9 +13,10 @@ class RoomData:
 
 
 class World:
-    def __init__(self, width: int, height: int) -> None:
+    def __init__(self, game_dir: str, width: int, height: int) -> None:
         assert width
         assert height
+        self.game_dir = game_dir
         self.width = width
         self.height = height
         self.objects: Optional[Dict] = None

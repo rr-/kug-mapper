@@ -85,7 +85,7 @@ def read_world(game_dir: str, debug: bool) -> World:
             width = min(width, 10)
             height = min(height, 10)
 
-        world = World(width, height)
+        world = World(game_dir, width, height)
         for x, y, name, data in _iterate(handle, True):
             if y > height: continue
             if x > width: continue
