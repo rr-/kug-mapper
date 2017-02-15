@@ -1,5 +1,5 @@
 from kug.util import range2d
-from typing import Any, Tuple, Dict
+from typing import Any, Optional, Tuple, Dict
 
 
 class RoomData:
