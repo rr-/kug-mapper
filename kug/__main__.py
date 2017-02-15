@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import os
-import io
 import re
-import struct
 import random
-import logging
 from typing import Any, Optional, Union, Tuple, List, Dict, Iterator
 from PIL import Image, ImageDraw
-from progress.bar import Bar
+from kug.util import range2d, progress, scan_tree
+from kug.world import World
+from kug.world_reader import read_world
 
 
 ImageObj = Any
@@ -27,93 +26,12 @@ TILE_BORDER_WIDTH = (TILE_FULL_WIDTH - TILE_WIDTH) // 2
 TILE_BORDER_HEIGHT = (TILE_FULL_HEIGHT - TILE_HEIGHT) // 2
 MAX_TILE_X = 5
 MAX_TILE_Y = 5
-DATA_NAME_REGEX = r'(\d+),(\d+) (\w+)'
 PRETTY_COLORS = False
-DEBUG = False
-
-
-def progress(what: Any) -> Any:
-    return Bar().iter(list(what))
-
-
-def range2d(max_x: int, max_y: int) -> Iterator[Tuple[int, int]]:
-    for y in range(max_y):
-        for x in range(max_x):
-            yield (x, y)
-
-
-class RoomData:
-    def __init__(self) -> None:
-        self.objects: Any = None
-        self.robots: Any = None
-        self.script: Any = None
-        self.settings: Any = None
-        self.sprites: Any = None
-        self.tiles: Any = None
-
-
-class World:
-    def __init__(self, width: int, height: int) -> None:
-        assert width
-        assert height
-        self.width = width
-        self.height = height
-        self.objects: Optional[Dict] = None
-        self.room_data: Dict[Tuple[int, int], RoomData] = {}
-        for x, y in range2d(self.width + 1, self.height + 1):
-            self.room_data[x, y] = RoomData()
-
-    def __getitem__(self, key):
-        return self.room_data[key]
-
-
-def _read_u8(handle: io.BufferedReader) -> int:
-    return struct.unpack('B', handle.read(1))[0]
-
-
-def _read_u32(handle: io.BufferedReader) -> int:
-    return struct.unpack('<L', handle.read(4))[0]
-
-
-def _read_zero_string(handle: io.BufferedReader) -> str:
-    ret = b''
-    while True:
-        byte = _read_u8(handle)
-        if byte == 0:
-            break
-        ret += bytes([byte])
-    return ret.decode('utf-8')
-
-
-def _parse_ini(data: str) -> Dict:
-    ret: Dict = {}
-    lines = data.replace('\r', '').split('\n')
-    for line in lines:
-        match = re.match('^\[(.*)\]$', line)
-        if match:
-            name, = match.groups()
-            ret[name] = current_obj = {}
-            continue
-
-        match = re.match('^([^=]+)=(.*)$', line)
-        if match:
-            key, value = match.groups()
-            current_obj[key] = value
-            continue
-
-    return ret
-
-
-def _scan_tree(path):
-    for entry in os.scandir(path):
-        if entry.is_dir(follow_symlinks=False):
-            yield from _scan_tree(entry.path)
-        else:
-            yield entry
+DEBUG = True
 
 
 def _read_tile_set_images() -> Dict[str, ImageObj]:
-    logging.info('Preparing tile sets...')
+    print('Preparing tile sets...')
     tile_set_images: Dict[str, ImageObj] = {}
     tile_set_images['Null Tileset'] = (
         Image.new(
@@ -123,7 +41,7 @@ def _read_tile_set_images() -> Dict[str, ImageObj]:
                 MAX_TILE_Y * TILE_FULL_HEIGHT),
             color=(255, 0, 0, 255)))
     tile_set_dir = os.path.join(GAME_DIR, 'Tilesets')
-    for entry in _scan_tree(tile_set_dir):
+    for entry in scan_tree(tile_set_dir):
         name, _ = os.path.splitext(entry.name)
         tile_set_images[name] = (
             Image
@@ -133,10 +51,10 @@ def _read_tile_set_images() -> Dict[str, ImageObj]:
 
 
 def _read_object_images() -> Dict[str, ImageObj]:
-    logging.info('Preparing object images...')
+    print('Preparing object images...')
     object_images: Dict[str, ImageObj] = {}
     object_dir = os.path.join(GAME_DIR, 'Objects')
-    for entry in _scan_tree(object_dir):
+    for entry in scan_tree(object_dir):
         name, ext = os.path.splitext(os.path.relpath(entry.path, object_dir))
         if ext == '.ini':
             continue
@@ -164,72 +82,6 @@ def _create_solid_tile_image(color: Color) -> ImageObj:
     return image
 
 
-def _read_world(game_dir: str) -> World:
-    logging.info('Reading world data...')
-
-    def iterate(handle: io.BufferedReader, use_data: bool) -> Iterator[Tuple]:
-        handle.seek(0, os.SEEK_END)
-        size = handle.tell()
-        handle.seek(0)
-
-        while handle.tell() < size:
-            name = _read_zero_string(handle)
-            data_size = _read_u32(handle)
-            if use_data:
-                data = handle.read(data_size)
-            else:
-                handle.seek(data_size, io.SEEK_CUR)
-                data = None
-
-            matches = re.match(DATA_NAME_REGEX, name)
-            assert matches, 'Corrupt game data'
-
-            x = int(matches.group(1))
-            y = int(matches.group(2))
-            name = matches.group(3)
-            assert x >= 0, 'Negative map coordinates'
-            assert y >= 0, 'Negative map coordinates'
-
-            yield (x, y, name, data)
-
-    world_bin_path = os.path.join(game_dir, 'World.bin')
-    with open(world_bin_path, 'rb') as handle:
-        width = 0
-        height = 0
-        for x, y, name, data in iterate(handle, False):
-            width = max(width, x)
-            height = max(height, y)
-
-        if DEBUG:
-            width = min(width, 10)
-            height = min(height, 10)
-
-        world = World(width, height)
-        for x, y, name, data in iterate(handle, True):
-            if y > height: continue
-            if x > width: continue
-            if name == 'Sprites':
-                world[x, y].sprites = _parse_ini(data.decode('utf-8'))
-            elif name == 'Tiles':
-                world[x, y].tiles = _parse_ini(data.decode('utf-8'))
-            elif name == 'Objects':
-                world[x, y].objects = _parse_ini(data.decode('utf-8'))
-            elif name == 'Script':
-                world[x, y].script = data.decode('cp1250')
-            elif name == 'Settings':
-                world[x, y].settings = _parse_ini(data.decode('utf-8'))
-            elif name == 'Robots':
-                world[x, y].robots = _parse_ini(data.decode('utf-8'))
-            else:
-                raise ValueError('Unknown room data')
-
-    objects_ini_path = os.path.join(game_dir, 'Objects', 'Objects.ini')
-    with open(objects_ini_path, 'r', encoding='cp1250') as handle:
-        world.objects = _parse_ini(handle.read())
-
-    return world
-
-
 def _get_map_coord(
         world_x: int, room_x: int, world_y: int, room_y: int
         ) -> Tuple[int, int]:
@@ -253,7 +105,7 @@ def _mix_rgb(color1: Color, color2: Color, delta: float) -> Color:
 
 
 def _render_backgrounds(map_image: ImageObj, world: World) -> None:
-    logging.info('Drawing backgrounds...')
+    print('Drawing backgrounds...')
     draw = ImageDraw.Draw(map_image)
     for world_x, world_y in progress(range2d(world.width + 1, world.height + 1)):
         settings = world[world_x, world_y].settings
@@ -276,7 +128,7 @@ def _render_tiles(
         map_image: ImageObj,
         world: World,
         tile_set_images: Dict[str, ImageObj]) -> None:
-    logging.info('Drawing tiles...')
+    print('Drawing tiles...')
     black_image = _create_solid_tile_image((0, 0, 0, 255))
     for world_x, world_y in progress(range2d(world.width + 1, world.height + 1)):
         tiles = world[world_x, world_y].tiles
@@ -316,7 +168,7 @@ def _render_tile_modifiers(
         map_image: ImageObj,
         world: World,
         tile_modifier_tiles: Dict[str, ImageObj]) -> None:
-    logging.info('Drawing tile modifiers...')
+    print('Drawing tile modifiers...')
     for world_x, world_y in progress(range2d(world.width + 1, world.height + 1)):
         sprites = world[world_x, world_y].sprites
         tile_modifiers = [
@@ -348,7 +200,7 @@ def _render_objects(
         world: World,
         object_tiles: Dict[str, ImageObj],
         whitelist: List[str]) -> None:
-    logging.info('Drawing objects...')
+    print('Drawing objects...')
     for world_x, world_y in progress(range2d(world.width + 1, world.height + 1)):
         objects = [
             obj
@@ -377,7 +229,7 @@ def _render_objects(
 
 
 def _render_warps(map_image: ImageObj, world: World) -> None:
-    logging.info('Drawing warps...')
+    print('Drawing warps...')
 
     overlay_image = Image.new(
         mode='RGBA',
@@ -433,6 +285,7 @@ def _render_warps(map_image: ImageObj, world: World) -> None:
 
     map_image.paste(overlay_image, (0, 0), overlay_image)
 
+
 def _create_map_image(world: World) -> ImageObj:
     return Image.new(
         mode='RGB',
@@ -443,8 +296,9 @@ def _create_map_image(world: World) -> ImageObj:
 
 
 def main() -> None:
-    world = _read_world(GAME_DIR)
+    world = read_world(GAME_DIR, DEBUG)
 
+    print('Reading world data...')
     map_image = _create_map_image(world)
     if PRETTY_COLORS:
         _render_backgrounds(map_image, world)
@@ -469,7 +323,7 @@ def main() -> None:
 
     _render_warps(map_image, world)
 
-    logging.info('Rendering PNG...')
+    print('Rendering PNG...')
     (
         map_image
         .resize((map_image.width // SCALE, map_image.height // SCALE), Image.ANTIALIAS)
@@ -478,5 +332,4 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.INFO)
     main()
