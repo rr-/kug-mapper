@@ -20,7 +20,6 @@ TILE_BORDER_WIDTH = (TILE_FULL_WIDTH - TILE_WIDTH) // 2
 TILE_BORDER_HEIGHT = (TILE_FULL_HEIGHT - TILE_HEIGHT) // 2
 MAX_TILE_X = 5
 MAX_TILE_Y = 5
-PRETTY_COLORS = False
 
 
 def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
@@ -101,7 +100,8 @@ def _render_backgrounds(room_image: ImageObj, room_data: RoomData) -> None:
 def _render_tiles(
         room_image: ImageObj,
         room_data: RoomData,
-        tile_set_images: Dict[str, ImageObj]) -> None:
+        tile_set_images: Dict[str, ImageObj],
+        mask_tiles: bool) -> None:
     black_image = _create_solid_tile_image((0, 0, 0, 255))
     tile_set_names = [
         room_data.tiles['General']['Tileset %d' % i] for i in range(3)]
@@ -131,7 +131,7 @@ def _render_tiles(
                 (tile_set_y + 1) * TILE_FULL_HEIGHT)))
 
         room_image.paste(
-            tile_image if PRETTY_COLORS else black_image,
+            black_image if mask_tiles else tile_image,
             (
                 room_x * TILE_WIDTH - TILE_BORDER_WIDTH,
                 room_y * TILE_HEIGHT - TILE_BORDER_HEIGHT,
@@ -269,7 +269,7 @@ def _create_room_image() -> ImageObj:
         color=(255, 225, 205))
 
 
-def render_world(world: World):
+def render_world(world: World, render_backgrounds: bool, mask_tiles: bool):
     tile_set_images = _read_tile_set_images(world.game_dir)
     object_images = _read_object_images(world.game_dir)
 
@@ -290,7 +290,7 @@ def render_world(world: World):
         room_image = _create_room_image()
         room_data = world[world_x, world_y]
 
-        if PRETTY_COLORS:
+        if render_backgrounds:
             _render_backgrounds(room_image, room_data)
         _render_objects(
             room_image,
@@ -298,7 +298,7 @@ def render_world(world: World):
             world,
             object_images,
             obj_whitelist)
-        _render_tiles(room_image, room_data, tile_set_images)
+        _render_tiles(room_image, room_data, tile_set_images, mask_tiles)
         _render_tile_modifiers(
             room_image, room_data, tile_modifier_tiles)
 
