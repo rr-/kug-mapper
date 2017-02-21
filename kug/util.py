@@ -1,4 +1,5 @@
 import os
+import string
 from progress.bar import Bar
 from typing import Iterator, Optional, Any, Tuple, List
 
@@ -51,3 +52,13 @@ def parse_geometry(input: str) -> Optional[Geometry]:
         min_x = max_x = x
         min_y = max_y = y
     return Geometry(int(min_x), int(min_y), int(max_x), int(max_y))
+
+
+def number_to_spreadsheet_notation(num: int) -> str:
+    title = ''
+    alphabet = string.ascii_uppercase
+    while num:
+        mod = (num - 1) % 26
+        num = (num - mod) // 26
+        title += alphabet[mod]
+    return title[::-1]

@@ -1,9 +1,11 @@
 import os
 import re
 import random
+from string import ascii_lowercase
 from typing import Any, Optional, Union, Tuple, List, Dict
 from PIL import Image, ImageFont, ImageDraw
-from kug.util import range2d, progress, scan_tree, Geometry
+from kug import util
+from kug.util import Geometry
 from kug.world import World, RoomData
 
 
@@ -20,7 +22,7 @@ TILE_BORDER_WIDTH = (TILE_FULL_WIDTH - TILE_WIDTH) // 2
 TILE_BORDER_HEIGHT = (TILE_FULL_HEIGHT - TILE_HEIGHT) // 2
 MAX_TILE_X = 5
 MAX_TILE_Y = 5
-FONT_SIZE = 50
+FONT_SIZE = 60
 FONT_NAME = 'arial.ttf'
 
 WARP_FONT_COLOR = 'red'
@@ -33,8 +35,16 @@ AXIS_COLOR = 'black'
 AXIS_FONT_COLOR = 'white'
 
 
+def _get_room_name_x(x: int) -> str:
+    return util.number_to_spreadsheet_notation(x + 1)
+
+
+def _get_room_name_y(y: int) -> str:
+    return str(y + 1)
+
+
 def _get_room_name(x: int, y: int) -> str:
-    return '(%d,%d)' % (x, y)
+    return _get_room_name_x(x) + _get_room_name_y(y)
 
 
 def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
@@ -47,7 +57,7 @@ def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
                 MAX_TILE_Y * TILE_FULL_HEIGHT),
             color=(255, 0, 0, 255)))
     tile_set_dir = os.path.join(game_dir, 'Tilesets')
-    for entry in scan_tree(tile_set_dir):
+    for entry in util.scan_tree(tile_set_dir):
         name, _ = os.path.splitext(entry.name)
         tile_set_images[name] = (
             Image
@@ -59,7 +69,7 @@ def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
 def _read_object_images(game_dir: str) -> Dict[str, ImageObj]:
     object_images: Dict[str, ImageObj] = {}
     object_dir = os.path.join(game_dir, 'Objects')
-    for entry in scan_tree(object_dir):
+    for entry in util.scan_tree(object_dir):
         name, ext = os.path.splitext(os.path.relpath(entry.path, object_dir))
         if ext == '.ini':
             continue
@@ -121,7 +131,7 @@ def _render_tiles(
     tile_set_names = [
         room_data.tiles['General']['Tileset %d' % i] for i in range(3)]
 
-    for room_x, room_y in range2d(ROOM_WIDTH, ROOM_HEIGHT):
+    for room_x, room_y in util.range2d(ROOM_WIDTH, ROOM_HEIGHT):
         tile_str = (
             room_data.tiles
             ['Tile Map']
@@ -165,7 +175,7 @@ def _render_tile_modifiers(
         and 'X' in sprite
         and 'Y' in sprite
         and sprite.get('Sprite') in tile_modifier_tiles]
-    for room_x, room_y in range2d(ROOM_WIDTH, ROOM_HEIGHT):
+    for room_x, room_y in util.range2d(ROOM_WIDTH, ROOM_HEIGHT):
         tile_modifier_names = [
             sprite.get('Sprite')
             for sprite in tile_modifiers
@@ -230,12 +240,12 @@ def _render_warps(
             fill=WARP_FONT_COLOR)
 
 
-def _render_axes(geometry: Geometry, map_image: ImageObj) -> None:
+def _render_axes(geometry: util.Geometry, map_image: ImageObj) -> None:
     draw = ImageDraw.Draw(map_image)
     font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
 
     for world_x in range(geometry.min_x, geometry.max_x + 1):
-        text = _get_room_name(world_x, 0)
+        text = _get_room_name_x(world_x)
         text_width, text_height = font.getsize(text)
         x1 = (
             AXIS_SIZE_X + ROOM_BORDER_SIZE
@@ -256,7 +266,7 @@ def _render_axes(geometry: Geometry, map_image: ImageObj) -> None:
             fill=AXIS_FONT_COLOR)
 
     for world_y in range(geometry.min_y, geometry.max_y + 1):
-        text = _get_room_name(0, world_y)
+        text = _get_room_name_y(world_y)
         text_width, text_height = font.getsize(text)
         x1 = 0
         x2 = AXIS_SIZE_X - 1
@@ -277,7 +287,7 @@ def _render_axes(geometry: Geometry, map_image: ImageObj) -> None:
 
     draw.rectangle((0, 0, AXIS_SIZE_X - 1, AXIS_SIZE_Y - 1), fill=AXIS_COLOR)
 
-def _create_map_image(geometry: Geometry) -> ImageObj:
+def _create_map_image(geometry: util.Geometry) -> ImageObj:
     width = geometry.max_x + 1 - geometry.min_x
     height = geometry.max_y + 1 - geometry.min_y
     return Image.new(
@@ -302,7 +312,7 @@ def render_world(
         world: World,
         render_backgrounds: bool,
         mask_tiles: bool,
-        geometry: Optional[Geometry]):
+        geometry: Optional[util.Geometry]):
     tile_set_images = _read_tile_set_images(world.game_dir)
     object_images = _read_object_images(world.game_dir)
 
@@ -318,11 +328,11 @@ def render_world(
     ]
 
     if not geometry:
-        geometry = Geometry(0, 0, world.width - 1, world.height - 1)
+        geometry = util.Geometry(0, 0, world.width - 1, world.height - 1)
 
     map_image = _create_map_image(geometry)
-    for world_x, world_y in progress(
-            range2d(
+    for world_x, world_y in util.progress(
+            util.range2d(
                 geometry.min_x,
                 geometry.min_y,
                 geometry.max_x + 1,
