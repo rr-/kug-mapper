@@ -36,6 +36,7 @@ AXIS_SIZE_X = 120
 AXIS_SIZE_Y = 80
 AXIS_COLOR = 'black'
 AXIS_FONT_COLOR = 'white'
+ROOM_NAME_FONT_COLOR = (128, 128, 128, 128)
 
 
 def _get_room_name_x(x: int) -> str:
@@ -253,6 +254,23 @@ def _render_warps(
             fill=OUTGOING_WARP_FONT_COLOR)
 
 
+def _render_room_name(room_image: ImageObj, room_data: RoomData) -> None:
+    overlay_image = Image.new(size=room_image.size, mode='RGBA')
+    draw = ImageDraw.Draw(overlay_image)
+    font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
+    text = _get_room_name(room_data.x, room_data.y)
+    text_width, text_height = font.getsize(text)
+    draw.text(
+        (
+            (room_image.width - text_width) / 2,
+            10,
+        ),
+        text,
+        font=font,
+        fill=ROOM_NAME_FONT_COLOR)
+    room_image.paste(overlay_image, (0, 0), overlay_image)
+
+
 def _render_axes(geometry: util.Geometry, map_image: ImageObj) -> None:
     draw = ImageDraw.Draw(map_image)
     font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
@@ -386,6 +404,7 @@ def render_world(
         _render_tile_modifiers(
             room_image, room_data, tile_modifier_tiles)
         _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
+        _render_room_name(room_image, room_data)
 
         map_image.paste(
             room_image,
