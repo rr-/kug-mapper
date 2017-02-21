@@ -1,9 +1,9 @@
 import os
 import re
 import random
-from typing import Any, Union, Tuple, List, Dict
+from typing import Any, Optional, Union, Tuple, List, Dict
 from PIL import Image, ImageFont, ImageDraw
-from kug.util import range2d, progress, scan_tree
+from kug.util import range2d, progress, scan_tree, Geometry
 from kug.world import World, RoomData
 
 
@@ -221,12 +221,14 @@ def _render_warps(
             fill=WARP_FONT_COLOR)
 
 
-def _create_map_image(world: World) -> ImageObj:
+def _create_map_image(geometry: Geometry) -> ImageObj:
+    width = geometry.max_x + 1 - geometry.min_x
+    height = geometry.max_y + 1 - geometry.min_y
     return Image.new(
         mode='RGB',
         size=(
-            world.width * ROOM_WIDTH * TILE_WIDTH,
-            world.height * ROOM_HEIGHT * TILE_HEIGHT))
+            width * ROOM_WIDTH * TILE_WIDTH,
+            height * ROOM_HEIGHT * TILE_HEIGHT))
 
 
 def _create_room_image() -> ImageObj:
@@ -236,7 +238,11 @@ def _create_room_image() -> ImageObj:
         color=(255, 225, 205))
 
 
-def render_world(world: World, render_backgrounds: bool, mask_tiles: bool):
+def render_world(
+        world: World,
+        render_backgrounds: bool,
+        mask_tiles: bool,
+        geometry: Optional[Geometry]):
     tile_set_images = _read_tile_set_images(world.game_dir)
     object_images = _read_object_images(world.game_dir)
 
@@ -251,9 +257,16 @@ def render_world(world: World, render_backgrounds: bool, mask_tiles: bool):
         'Kill Area 2',
     ]
 
-    map_image = _create_map_image(world)
+    if not geometry:
+        geometry = Geometry(0, 0, world.width - 1, world.height - 1)
+
+    map_image = _create_map_image(geometry)
     for world_x, world_y in progress(
-            range2d(world.width + 1, world.height + 1)):
+            range2d(
+                geometry.min_x,
+                geometry.min_y,
+                geometry.max_x + 1,
+                geometry.max_y + 1)):
         room_image = _create_room_image()
         room_data = world[world_x, world_y]
 
@@ -272,5 +285,8 @@ def render_world(world: World, render_backgrounds: bool, mask_tiles: bool):
 
         map_image.paste(
             room_image,
-            (world_x * room_image.width, world_y * room_image.height))
+            (
+                (world_x - geometry.min_x) * room_image.width,
+                (world_y - geometry.min_y) * room_image.height
+            ))
     return map_image

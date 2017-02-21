@@ -3,7 +3,8 @@ import os
 import re
 import struct
 from kug.world import World
-from typing import Tuple, Dict, Iterator
+from kug.util import Geometry
+from typing import Optional, Tuple, Dict, Iterator
 
 
 _DATA_NAME_REGEX = r'(\d+),(\d+) (\w+)'
@@ -72,7 +73,7 @@ def _iterate(handle: io.BufferedReader, use_data: bool) -> Iterator[Tuple]:
         yield (x, y, name, data)
 
 
-def read_world(game_dir: str, debug: bool) -> World:
+def read_world(game_dir: str, geometry: Optional[Geometry]) -> World:
     world_bin_path = os.path.join(game_dir, 'World.bin')
     with open(world_bin_path, 'rb') as handle:
         width = 0
@@ -81,14 +82,13 @@ def read_world(game_dir: str, debug: bool) -> World:
             width = max(width, x)
             height = max(height, y)
 
-        if debug:
-            width = min(width, 10)
-            height = min(height, 10)
-
         world = World(game_dir, width, height)
         for x, y, name, data in _iterate(handle, True):
-            if y > height: continue
-            if x > width: continue
+            if geometry and x < geometry.min_x: continue
+            if geometry and x > geometry.max_x: continue
+            if geometry and y < geometry.min_y: continue
+            if geometry and y > geometry.max_y: continue
+
             if name == 'Sprites':
                 world[x, y].sprites = _parse_ini(data.decode('utf-8'))
             elif name == 'Tiles':
