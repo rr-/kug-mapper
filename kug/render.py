@@ -24,6 +24,17 @@ FONT_SIZE = 50
 FONT_NAME = 'arial.ttf'
 
 WARP_FONT_COLOR = 'red'
+ROOM_BORDER_COLOR = 'brown'
+ROOM_BORDER_COLOR = 'grey'
+ROOM_BORDER_SIZE = 4
+AXIS_SIZE_X = 120
+AXIS_SIZE_Y = 80
+AXIS_COLOR = 'black'
+AXIS_FONT_COLOR = 'white'
+
+
+def _get_room_name(x: int, y: int) -> str:
+    return '(%d,%d)' % (x, y)
 
 
 def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
@@ -207,19 +218,64 @@ def _render_warps(
         room_data: RoomData) -> None:
     matches = re.findall(
         r'room_set\((\d+),\s*(\d+)\)', room_data.script)
-
     draw = ImageDraw.Draw(room_image)
     font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
-
     for i, match in enumerate(matches):
         target_x = int(match[0])
         target_y = int(match[1])
         draw.text(
             (10, 10 + FONT_SIZE * i),
-            '\N{RIGHTWARDS ARROW}(%d,%d)' % (target_x, target_y),
+            '\N{RIGHTWARDS ARROW}' + _get_room_name(target_x, target_y),
             font=font,
             fill=WARP_FONT_COLOR)
 
+
+def _render_axes(geometry: Geometry, map_image: ImageObj) -> None:
+    draw = ImageDraw.Draw(map_image)
+    font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
+
+    for world_x in range(geometry.min_x, geometry.max_x + 1):
+        text = _get_room_name(world_x, 0)
+        text_width, text_height = font.getsize(text)
+        x1 = (
+            AXIS_SIZE_X + ROOM_BORDER_SIZE
+            + (world_x - geometry.min_x)
+            * (ROOM_WIDTH * TILE_WIDTH + ROOM_BORDER_SIZE))
+        x2 = x1 + ROOM_WIDTH * TILE_WIDTH - 1
+        y1 = 0
+        y2 = AXIS_SIZE_Y - 1
+
+        draw.rectangle((x1, y1, x2, y2), fill=AXIS_COLOR)
+        draw.text(
+            (
+                x1 + (x2 - x1 - text_width) / 2,
+                y1 + (y2 - y1 - text_height) / 2,
+            ),
+            text,
+            font=font,
+            fill=AXIS_FONT_COLOR)
+
+    for world_y in range(geometry.min_y, geometry.max_y + 1):
+        text = _get_room_name(0, world_y)
+        text_width, text_height = font.getsize(text)
+        x1 = 0
+        x2 = AXIS_SIZE_X - 1
+        y1 = (
+            AXIS_SIZE_Y + ROOM_BORDER_SIZE
+            + (world_y - geometry.min_y)
+            * (ROOM_HEIGHT * TILE_HEIGHT + ROOM_BORDER_SIZE))
+        y2 = y1 + ROOM_HEIGHT * TILE_HEIGHT - 1
+
+        draw.rectangle((x1, y1, x2, y2), fill=AXIS_COLOR)
+        draw.text(
+            (
+                x1 + (x2 - x1 - text_width) / 2,
+                y1 + (y2 - y1 - text_height) / 2,
+            ),
+            text,
+            font=font)
+
+    draw.rectangle((0, 0, AXIS_SIZE_X - 1, AXIS_SIZE_Y - 1), fill=AXIS_COLOR)
 
 def _create_map_image(geometry: Geometry) -> ImageObj:
     width = geometry.max_x + 1 - geometry.min_x
@@ -227,8 +283,12 @@ def _create_map_image(geometry: Geometry) -> ImageObj:
     return Image.new(
         mode='RGB',
         size=(
-            width * ROOM_WIDTH * TILE_WIDTH,
-            height * ROOM_HEIGHT * TILE_HEIGHT))
+            AXIS_SIZE_X + ROOM_BORDER_SIZE
+            + width * ((ROOM_WIDTH * TILE_WIDTH) + ROOM_BORDER_SIZE),
+            AXIS_SIZE_Y + ROOM_BORDER_SIZE
+            + height * ((ROOM_HEIGHT * TILE_HEIGHT) + ROOM_BORDER_SIZE),
+        ),
+        color=ROOM_BORDER_COLOR)
 
 
 def _create_room_image() -> ImageObj:
@@ -286,7 +346,13 @@ def render_world(
         map_image.paste(
             room_image,
             (
-                (world_x - geometry.min_x) * room_image.width,
-                (world_y - geometry.min_y) * room_image.height
+                AXIS_SIZE_X + ROOM_BORDER_SIZE
+                + (world_x - geometry.min_x)
+                * (room_image.width + ROOM_BORDER_SIZE),
+                AXIS_SIZE_Y + ROOM_BORDER_SIZE
+                + (world_y - geometry.min_y)
+                * (room_image.height + ROOM_BORDER_SIZE)
             ))
+
+    _render_axes(geometry, map_image)
     return map_image
