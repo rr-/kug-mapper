@@ -2,7 +2,7 @@ import os
 import re
 import random
 from typing import Any, Union, Tuple, List, Dict
-from PIL import Image, ImageDraw
+from PIL import Image, ImageFont, ImageDraw
 from kug.util import range2d, progress, scan_tree
 from kug.world import World, RoomData
 
@@ -20,6 +20,10 @@ TILE_BORDER_WIDTH = (TILE_FULL_WIDTH - TILE_WIDTH) // 2
 TILE_BORDER_HEIGHT = (TILE_FULL_HEIGHT - TILE_HEIGHT) // 2
 MAX_TILE_X = 5
 MAX_TILE_Y = 5
+FONT_SIZE = 50
+FONT_NAME = 'arial.ttf'
+
+WARP_FONT_COLOR = 'red'
 
 
 def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
@@ -198,60 +202,23 @@ def _render_objects(
             print(ex, file=os.sys.stderr)
 
 
-def _render_warps(map_image: ImageObj, world: World) -> None:
-    overlay_image = Image.new(
-        mode='RGBA',
-        size=(
-            world.width * ROOM_WIDTH * TILE_WIDTH,
-            world.height * ROOM_HEIGHT * TILE_HEIGHT))
-    draw = ImageDraw.Draw(overlay_image)
+def _render_warps(
+        room_image: ImageObj,
+        room_data: RoomData) -> None:
+    matches = re.findall(
+        r'room_set\((\d+),\s*(\d+)\)', room_data.script)
 
-    def draw_rectangle(draw, coordinates, outline, width=1):
-        for i in range(width):
-            rect_start = (coordinates[0] + i, coordinates[1] + i)
-            rect_end = (coordinates[2] - i, coordinates[3] - i)
-            draw.rectangle((rect_start, rect_end), outline=outline)
+    draw = ImageDraw.Draw(room_image)
+    font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
 
-    for world_x, world_y in progress(range2d(world.width + 1, world.height + 1)):
-        matches = re.findall(
-            r'room_set\((\d+),\s*(\d+)\)', world[world_x, world_y].script)
-
-        for match in matches:
-            target_x = int(match[0])
-            target_y = int(match[1])
-            color = tuple([random.randint(100, 200) for _ in range(3)] + [200])
-
-            draw_rectangle(
-                draw,
-                (
-                    world_x * ROOM_WIDTH * TILE_WIDTH,
-                    world_y * ROOM_HEIGHT * TILE_HEIGHT,
-                    (world_x + 1) * ROOM_WIDTH * TILE_WIDTH,
-                    (world_y + 1) * ROOM_HEIGHT * TILE_HEIGHT,
-                ),
-                outline=color,
-                width=16)
-            draw_rectangle(
-                draw,
-                (
-                    target_x * ROOM_WIDTH * TILE_WIDTH,
-                    target_y * ROOM_HEIGHT * TILE_HEIGHT,
-                    (target_x + 1) * ROOM_WIDTH * TILE_WIDTH,
-                    (target_y + 1) * ROOM_HEIGHT * TILE_HEIGHT,
-                ),
-                outline=color,
-                width=16)
-            draw.line(
-                (
-                    (world_x + random.uniform(0.3, 0.7)) * ROOM_WIDTH * TILE_WIDTH,
-                    (world_y + random.uniform(0.3, 0.7)) * ROOM_HEIGHT * TILE_HEIGHT,
-                    (target_x + random.uniform(0.3, 0.7)) * ROOM_WIDTH * TILE_WIDTH,
-                    (target_y + random.uniform(0.3, 0.7)) * ROOM_HEIGHT * TILE_HEIGHT,
-                ),
-                fill=color,
-                width=16)
-
-    map_image.paste(overlay_image, (0, 0), overlay_image)
+    for i, match in enumerate(matches):
+        target_x = int(match[0])
+        target_y = int(match[1])
+        draw.text(
+            (10, 10 + FONT_SIZE * i),
+            '\N{RIGHTWARDS ARROW}(%d,%d)' % (target_x, target_y),
+            font=font,
+            fill=WARP_FONT_COLOR)
 
 
 def _create_map_image(world: World) -> ImageObj:
@@ -301,9 +268,9 @@ def render_world(world: World, render_backgrounds: bool, mask_tiles: bool):
         _render_tiles(room_image, room_data, tile_set_images, mask_tiles)
         _render_tile_modifiers(
             room_image, room_data, tile_modifier_tiles)
+        _render_warps(room_image, room_data)
 
         map_image.paste(
             room_image,
             (world_x * room_image.width, world_y * room_image.height))
-    _render_warps(map_image, world)
     return map_image
