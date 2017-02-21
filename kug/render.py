@@ -11,6 +11,8 @@ from kug.world import World, RoomData
 
 ImageObj = Any
 Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
+Coord = Tuple[int, int]
+WarpDict = Dict[Coord, List[Coord]]
 
 ROOM_WIDTH = 31
 ROOM_HEIGHT = 18
@@ -22,10 +24,11 @@ TILE_BORDER_WIDTH = (TILE_FULL_WIDTH - TILE_WIDTH) // 2
 TILE_BORDER_HEIGHT = (TILE_FULL_HEIGHT - TILE_HEIGHT) // 2
 MAX_TILE_X = 5
 MAX_TILE_Y = 5
-FONT_SIZE = 60
+FONT_SIZE = 50
 FONT_NAME = 'arial.ttf'
 
-WARP_FONT_COLOR = 'red'
+OUTGOING_WARP_FONT_COLOR = 'red'
+INCOMING_WARP_FONT_COLOR = 'magenta'
 ROOM_BORDER_COLOR = 'brown'
 ROOM_BORDER_COLOR = 'grey'
 ROOM_BORDER_SIZE = 4
@@ -225,19 +228,29 @@ def _render_objects(
 
 def _render_warps(
         room_image: ImageObj,
-        room_data: RoomData) -> None:
-    matches = re.findall(
-        r'room_set\((\d+),\s*(\d+)\)', room_data.script)
+        room_data: RoomData,
+        outgoing_warps: WarpDict,
+        incoming_warps: WarpDict) -> None:
     draw = ImageDraw.Draw(room_image)
     font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
-    for i, match in enumerate(matches):
-        target_x = int(match[0])
-        target_y = int(match[1])
+
+    for i, source_pos in enumerate(incoming_warps.get(room_data.pos, [])):
+        source_x, source_y = source_pos
         draw.text(
             (10, 10 + FONT_SIZE * i),
-            '\N{RIGHTWARDS ARROW}' + _get_room_name(target_x, target_y),
+            _get_room_name(source_x, source_y) + '\N{RIGHTWARDS ARROW}' ,
             font=font,
-            fill=WARP_FONT_COLOR)
+            fill=INCOMING_WARP_FONT_COLOR)
+
+    for i, target_pos in enumerate(outgoing_warps.get(room_data.pos, [])):
+        target_x, target_y = target_pos
+        text = '\N{RIGHTWARDS ARROW}' + _get_room_name(target_x, target_y)
+        text_width, _ = font.getsize(text)
+        draw.text(
+            (room_image.width - 10 - text_width, 10 + FONT_SIZE * i),
+            text,
+            font=font,
+            fill=OUTGOING_WARP_FONT_COLOR)
 
 
 def _render_axes(geometry: util.Geometry, map_image: ImageObj) -> None:
@@ -308,6 +321,26 @@ def _create_room_image() -> ImageObj:
         color=(255, 225, 205))
 
 
+def _get_warp_data(world: World) -> Tuple[WarpDict, WarpDict]:
+    regex = r'room_set\((\d+),\s*(\d+)\)'
+    outgoing_warps: WarpData = {}
+    incoming_warps: WarpData = {}
+    for world_x, world_y in util.range2d(
+            0, 0, world.width + 1, world.height + 1):
+        for match in re.findall(regex, world[world_x, world_y].script or ''):
+            target_x = int(match[0])
+            target_y = int(match[1])
+
+            if not (world_x, world_y) in outgoing_warps:
+                outgoing_warps[world_x, world_y] = []
+            outgoing_warps[world_x, world_y].append((target_x, target_y))
+
+            if not (target_x, target_y) in incoming_warps:
+                incoming_warps[target_x, target_y] = []
+            incoming_warps[target_x, target_y].append((world_x, world_y))
+    return outgoing_warps, incoming_warps
+
+
 def render_world(
         world: World,
         render_backgrounds: bool,
@@ -331,6 +364,7 @@ def render_world(
         geometry = util.Geometry(0, 0, world.width - 1, world.height - 1)
 
     map_image = _create_map_image(geometry)
+    outgoing_warps, incoming_warps = _get_warp_data(world)
     for world_x, world_y in util.progress(
             util.range2d(
                 geometry.min_x,
@@ -351,7 +385,7 @@ def render_world(
         _render_tiles(room_image, room_data, tile_set_images, mask_tiles)
         _render_tile_modifiers(
             room_image, room_data, tile_modifier_tiles)
-        _render_warps(room_image, room_data)
+        _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
 
         map_image.paste(
             room_image,
