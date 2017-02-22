@@ -76,11 +76,12 @@ def _iterate(handle: io.BufferedReader, use_data: bool) -> Iterator[Tuple]:
 def read_world(game_dir: str, geometry: Optional[Geometry]) -> World:
     world_bin_path = os.path.join(game_dir, 'World.bin')
     with open(world_bin_path, 'rb') as handle:
-        width = 0
-        height = 0
-        for x, y, name, data in _iterate(handle, False):
-            width = max(width, x)
-            height = max(height, y)
+        min_x = min(coord[0] for coord in _iterate(handle, False))
+        max_x = max(coord[0] for coord in _iterate(handle, False))
+        min_y = min(coord[1] for coord in _iterate(handle, False))
+        max_y = max(coord[1] for coord in _iterate(handle, False))
+        width = max_x + 1 - min_x
+        height = max_y + 1 - min_y
 
         world = World(game_dir, width, height)
         for x, y, name, data in _iterate(handle, True):
