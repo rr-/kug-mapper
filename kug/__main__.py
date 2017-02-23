@@ -29,6 +29,12 @@ def main() -> None:
     output_path: str = args.output_path
 
     world = read_world(game_dir, geometry)
+    if geometry:
+        geometry.min_x = max(0, geometry.min_x)
+        geometry.min_y = max(0, geometry.min_y)
+        geometry.max_x = min(world.width - 1, geometry.max_x)
+        geometry.max_y = min(world.height - 1, geometry.max_y)
+
     map_image = render_world(world, render_backgrounds, mask_tiles, geometry)
     (
         map_image
