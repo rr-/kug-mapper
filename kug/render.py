@@ -37,6 +37,7 @@ AXIS_SIZE_Y = 80
 AXIS_COLOR = 'black'
 AXIS_FONT_COLOR = 'white'
 ROOM_NAME_FONT_COLOR = (128, 128, 128, 128)
+DEFAULT_BACKGROUND = (255, 225, 205)
 
 
 def _get_room_name_x(x: int) -> str:
@@ -121,6 +122,7 @@ def _render_backgrounds(room_image: ImageObj, room_data: RoomData) -> None:
     for room_y in range(ROOM_HEIGHT * TILE_HEIGHT):
         new_color = _mix_rgb(
             color1, color2, room_y / (ROOM_HEIGHT * TILE_HEIGHT))
+        new_color = _mix_rgb(DEFAULT_BACKGROUND, new_color, 0.5)
         draw.rectangle(
             (0, room_y, room_image.width, room_y),
             fill=new_color)
@@ -336,7 +338,7 @@ def _create_room_image() -> ImageObj:
     return Image.new(
         mode='RGB',
         size=(ROOM_WIDTH * TILE_WIDTH, ROOM_HEIGHT * TILE_HEIGHT),
-        color=(255, 225, 205))
+        color=DEFAULT_BACKGROUND)
 
 
 def _get_warp_data(world: World) -> Tuple[WarpDict, WarpDict]:
