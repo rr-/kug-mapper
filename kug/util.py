@@ -1,4 +1,5 @@
 import os
+import re
 import string
 from progress.bar import Bar
 from typing import Iterator, Optional, Any, Tuple, List
@@ -40,25 +41,46 @@ def scan_tree(path):
             yield entry
 
 
+def parse_coord(input: str) -> Tuple[int, int]:
+    match = re.match('(\d+),(\d+)', input)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    match = re.match('([a-zA-Z]+)(\d+)', input)
+    if match:
+        return (
+            spreadsheet_notation_to_number(match.group(1)) - 1,
+            int(match.group(2)) - 1)
+    raise ValueError('Invalid coordinate')
+
+
 def parse_geometry(input: str) -> Optional[Geometry]:
     if not input or input == '*':
         return None
     if ':' in input:
         min_coord, max_coord = input.split(':')
-        min_x, min_y = min_coord.split(',')
-        max_x, max_y = max_coord.split(',')
+        min_x, min_y = parse_coord(min_coord)
+        max_x, max_y = parse_coord(max_coord)
+        return Geometry(min_x, min_y, max_x, max_y)
     else:
-        x, y = input.split(',')
-        min_x = max_x = x
-        min_y = max_y = y
-    return Geometry(int(min_x), int(min_y), int(max_x), int(max_y))
+        x, y = parse_coord(input)
+        return Geometry(x, y, x, y)
 
 
 def number_to_spreadsheet_notation(num: int) -> str:
-    title = ''
+    ret = ''
     alphabet = string.ascii_uppercase
     while num:
         mod = (num - 1) % 26
         num = (num - mod) // 26
-        title += alphabet[mod]
-    return title[::-1]
+        ret += alphabet[mod]
+    return ret[::-1]
+
+
+def spreadsheet_notation_to_number(input: str) -> int:
+    ret = 0
+    alphabet = string.ascii_uppercase
+    while input:
+        ret *= 26
+        ret += alphabet.index(input[0]) + 1
+        input = input[1:]
+    return ret
