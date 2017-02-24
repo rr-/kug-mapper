@@ -376,9 +376,9 @@ def _render_objects(
             scale = _parse_float(world_obj['Scale Min']) / 100.0 or 1
         angle = _parse_float(obj.get('Angle')) or 0
         if 'Transparency Override' in obj:
-            alpha = _parse_float(obj['Transparency Override']) or 255
+            alpha = 255 - (_parse_float(obj['Transparency Override']) or 0)
         elif 'Transparency Max' in world_obj:
-            alpha = _parse_float(world_obj['Transparency Max']) or 255
+            alpha = 255 - (_parse_float(world_obj['Transparency Max']) or 0)
         else:
             alpha = 255
         coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
