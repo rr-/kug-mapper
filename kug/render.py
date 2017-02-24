@@ -5,7 +5,7 @@ import math
 import random
 from string import ascii_lowercase
 from typing import Any, Optional, Union, Tuple, List, Dict
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw, ImageMath
 from kug import util
 from kug.util import Geometry
 from kug.world import World, RoomData
@@ -219,8 +219,20 @@ def _render_objects(
             image_name = world.objects[obj['Object']]['Image']
             scale = float(obj.get('Scale Multiplier', 1))
             angle = float(obj.get('Angle', 0))
+            alpha = float(obj.get('Transparency Override', 255))
+            coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
+            color = (*_to_rgb(coeff), alpha)
 
             object_tile = object_tiles[image_name]
+            object_tile = Image.merge(
+                'RGBA',
+                [
+                    ImageMath.eval(
+                        'convert(convert(image, "F") * coeff, "L")',
+                        image=band,
+                        coeff=color[i] / 255.)
+                    for i, band in enumerate(object_tile.split())
+                ])
             object_tile = object_tile.resize(
                 (int(object_tile.width * scale),
                 int(object_tile.height * scale)))
