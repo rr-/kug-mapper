@@ -1,5 +1,7 @@
 import os
+import sys
 import re
+import math
 import random
 from string import ascii_lowercase
 from typing import Any, Optional, Union, Tuple, List, Dict
@@ -215,18 +217,29 @@ def _render_objects(
     for obj in objects:
         try:
             image_name = world.objects[obj['Object']]['Image']
-            object_tile = (
-                object_tiles[image_name]
-                .rotate(int(obj.get('Angle', 0)), expand=True))
-            room_image.paste(
-                object_tile,
-                (
-                    int(obj['X']) - object_tile.width // 2,
-                    int(obj['Y']) - object_tile.height // 2,
-                ),
-                object_tile)
+            scale = float(obj.get('Scale Multiplier', 1))
+            angle = float(obj.get('Angle', 0))
+
+            object_tile = object_tiles[image_name]
+            object_tile = object_tile.resize(
+                (int(object_tile.width * scale),
+                int(object_tile.height * scale)))
+            object_tile = object_tile.rotate(angle, expand=True)
+
+            x0 = float(obj['X'])
+            y0 = float(obj['Y'])
+            x1 = x0 - object_tile.width / 2
+            y1 = y0 - object_tile.height / 2
+            hx = float(world.objects[obj['Object']].get('X Hotspot', 0))
+            hy = float(world.objects[obj['Object']].get('Y Hotspot', 0))
+            hotspot_theta = math.atan2(hy, hx) - math.radians(angle)
+            hotspot_delta = math.sqrt(hx * hx + hy * hy)
+            x2 = x1 - hotspot_delta * math.cos(hotspot_theta)
+            y2 = y1 - hotspot_delta * math.sin(hotspot_theta)
+            room_image.paste(object_tile, (int(x2), int(y2)), object_tile)
+
         except Exception as ex:
-            print(ex, file=os.sys.stderr)
+            print(ex, file=sys.stderr)
 
 
 def _render_warps(
