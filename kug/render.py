@@ -117,14 +117,18 @@ def _mix_rgb(color1: Color, color2: Color, delta: float) -> Color:
         for i in range(3))
 
 
-def _render_backgrounds(room_image: ImageObj, room_data: RoomData) -> None:
+def _render_backgrounds(
+        room_image: ImageObj,
+        room_data: RoomData,
+        semi_transparent: bool) -> None:
     color1 = _to_rgb(int(room_data.settings['General']['Gradient Top']))
     color2 = _to_rgb(int(room_data.settings['General']['Gradient Bottom']))
     draw = ImageDraw.Draw(room_image)
     for room_y in range(ROOM_HEIGHT * TILE_HEIGHT):
         new_color = _mix_rgb(
             color1, color2, room_y / (ROOM_HEIGHT * TILE_HEIGHT))
-        new_color = _mix_rgb(DEFAULT_BACKGROUND, new_color, 0.5)
+        if semi_transparent:
+            new_color = _mix_rgb(DEFAULT_BACKGROUND, new_color, 0.5)
         draw.rectangle(
             (0, room_y, room_image.width, room_y),
             fill=new_color)
@@ -418,6 +422,7 @@ def _get_warp_data(world: World) -> Tuple[WarpDict, WarpDict]:
 def render_world(
         world: World,
         render_backgrounds: bool,
+        render_objects: bool,
         mask_tiles: bool,
         geometry: Optional[util.Geometry]):
     tile_set_images = _read_tile_set_images(world.game_dir)
@@ -428,12 +433,14 @@ def render_world(
         'Tile Modifier 1': _create_solid_tile_image((255, 0, 255, 200)),
         'Tile Modifier 2': _create_solid_tile_image((0, 255, 255, 200)),
     }
-    obj_whitelist = [
+    object_whitelist = [
         'Kill Area 0',
         'Kill Area 1',
         'Kill Area 2',
         'Fast Travel Sign 0',
     ]
+    if render_objects:
+        object_whitelist = None
 
     if not geometry:
         geometry = util.Geometry(0, 0, world.width - 1, world.height - 1)
@@ -450,7 +457,7 @@ def render_world(
         room_data = world[world_x, world_y]
 
         if render_backgrounds:
-            _render_backgrounds(room_image, room_data)
+            _render_backgrounds(room_image, room_data, not render_objects)
         _render_objects(
             room_image,
             room_data,

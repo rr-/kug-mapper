@@ -13,6 +13,7 @@ def parse_args() -> argparse.Namespace:
         '~/.local/share/Steam/steamapps/common/Knytt Underground/World'))
     parser.add_argument('--geometry', default='*')
     parser.add_argument('--render-backgrounds', type=bool, default=False)
+    parser.add_argument('--render-objects', type=bool, default=False)
     parser.add_argument('--mask-tiles', type=bool, default=True)
     parser.add_argument('--scale', type=int, default=4)
     parser.add_argument('--output-path', type=str, default='map.png')
@@ -24,6 +25,7 @@ def main() -> None:
     game_dir: str = os.path.expanduser(args.game_dir)
     geometry: Geometry = parse_geometry(args.geometry)
     render_backgrounds: bool = args.render_backgrounds
+    render_objects: bool = args.render_objects
     mask_tiles: bool = args.mask_tiles
     scale: int = args.scale
     output_path: str = args.output_path
@@ -35,7 +37,9 @@ def main() -> None:
         geometry.max_x = min(world.width - 1, geometry.max_x)
         geometry.max_y = min(world.height - 1, geometry.max_y)
 
-    map_image = render_world(world, render_backgrounds, mask_tiles, geometry)
+    map_image = render_world(
+        world, render_backgrounds, render_objects, mask_tiles, geometry)
+
     (
         map_image
         .resize(
