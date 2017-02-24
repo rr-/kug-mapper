@@ -2,7 +2,7 @@ from kug.util import range2d
 from typing import Any, Optional, Tuple, Dict
 
 
-class RoomData:
+class Room:
     def __init__(self, x: int, y: int) -> None:
         self.x: int = x
         self.y: int = y
@@ -26,9 +26,9 @@ class World:
         self.width = width
         self.height = height
         self.objects: Optional[Dict] = None
-        self.room_data: Dict[Tuple[int, int], RoomData] = {}
+        self.room_data: Dict[Tuple[int, int], Room] = {}
         for x, y in range2d(self.width + 1, self.height + 1):
-            self.room_data[x, y] = RoomData(x, y)
+            self.room_data[x, y] = Room(x, y)
 
     def __getitem__(self, key):
         return self.room_data[key]

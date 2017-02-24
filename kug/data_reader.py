@@ -1,36 +1,16 @@
 import io
 import os
 import re
-import struct
-from kug.world import World
-from kug.util import Geometry
+from kug import binary, data, util
 from typing import Optional, Tuple, Dict, Iterator
 
 
 _DATA_NAME_REGEX = r'(\d+),(\d+) (\w+)'
 
 
-def _read_u8(handle: io.BufferedReader) -> int:
-    return struct.unpack('B', handle.read(1))[0]
-
-
-def _read_u32(handle: io.BufferedReader) -> int:
-    return struct.unpack('<L', handle.read(4))[0]
-
-
-def _read_zero_string(handle: io.BufferedReader) -> str:
-    ret = b''
-    while True:
-        byte = _read_u8(handle)
-        if byte == 0:
-            break
-        ret += bytes([byte])
-    return ret.decode('utf-8')
-
-
-def _parse_ini(data: str) -> Dict:
+def _parse_ini(content: str) -> Dict:
     ret: Dict = {}
-    lines = data.replace('\r', '').split('\n')
+    lines = content.replace('\r', '').split('\n')
     for line in lines:
         match = re.match('^\[(.*)\]$', line)
         if match:
@@ -47,19 +27,19 @@ def _parse_ini(data: str) -> Dict:
     return ret
 
 
-def _iterate(handle: io.BufferedReader, use_data: bool) -> Iterator[Tuple]:
+def _iterate(handle: io.BufferedReader, use_content: bool) -> Iterator[Tuple]:
     handle.seek(0, os.SEEK_END)
     size = handle.tell()
     handle.seek(0)
 
     while handle.tell() < size:
-        name = _read_zero_string(handle)
-        data_size = _read_u32(handle)
-        if use_data:
-            data = handle.read(data_size)
+        name = binary.read_zero_string(handle)
+        content_size = binary.read_u32(handle)
+        if use_content:
+            content = handle.read(content_size)
         else:
-            handle.seek(data_size, io.SEEK_CUR)
-            data = None
+            handle.seek(content_size, io.SEEK_CUR)
+            content = None
 
         matches = re.match(_DATA_NAME_REGEX, name)
         assert matches, 'Corrupt game data'
@@ -70,10 +50,10 @@ def _iterate(handle: io.BufferedReader, use_data: bool) -> Iterator[Tuple]:
         assert x >= 0, 'Negative map coordinates'
         assert y >= 0, 'Negative map coordinates'
 
-        yield (x, y, name, data)
+        yield (x, y, name, content)
 
 
-def read_world(game_dir: str, geometry: Optional[Geometry]) -> World:
+def read_world(game_dir: str, geometry: Optional[util.Geometry]) -> data.World:
     world_bin_path = os.path.join(game_dir, 'World.bin')
     with open(world_bin_path, 'rb') as handle:
         min_x = min(coord[0] for coord in _iterate(handle, False))
@@ -83,25 +63,25 @@ def read_world(game_dir: str, geometry: Optional[Geometry]) -> World:
         width = max_x + 1 - min_x
         height = max_y + 1 - min_y
 
-        world = World(game_dir, width, height)
-        for x, y, name, data in _iterate(handle, True):
+        world = data.World(game_dir, width, height)
+        for x, y, name, content in _iterate(handle, True):
             if geometry and x < geometry.min_x: continue
             if geometry and x > geometry.max_x: continue
             if geometry and y < geometry.min_y: continue
             if geometry and y > geometry.max_y: continue
 
             if name == 'Sprites':
-                world[x, y].sprites = _parse_ini(data.decode('utf-8'))
+                world[x, y].sprites = _parse_ini(content.decode('utf-8'))
             elif name == 'Tiles':
-                world[x, y].tiles = _parse_ini(data.decode('utf-8'))
+                world[x, y].tiles = _parse_ini(content.decode('utf-8'))
             elif name == 'Objects':
-                world[x, y].objects = _parse_ini(data.decode('utf-8'))
+                world[x, y].objects = _parse_ini(content.decode('utf-8'))
             elif name == 'Script':
-                world[x, y].script = data.decode('cp1250')
+                world[x, y].script = content.decode('cp1250')
             elif name == 'Settings':
-                world[x, y].settings = _parse_ini(data.decode('utf-8'))
+                world[x, y].settings = _parse_ini(content.decode('utf-8'))
             elif name == 'Robots':
-                world[x, y].robots = _parse_ini(data.decode('utf-8'))
+                world[x, y].robots = _parse_ini(content.decode('utf-8'))
             else:
                 raise ValueError('Unknown room data')
 

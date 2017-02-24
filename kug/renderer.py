@@ -3,12 +3,9 @@ import sys
 import re
 import math
 import random
-from string import ascii_lowercase
 from typing import Any, Optional, Union, Tuple, List, Dict
 from PIL import Image, ImageFont, ImageDraw, ImageMath
-from kug import util
-from kug.util import Geometry
-from kug.world import World, RoomData
+from kug import data, util
 
 
 ImageObj = Any
@@ -119,7 +116,7 @@ def _mix_rgb(color1: Color, color2: Color, delta: float) -> Color:
 
 def _render_backgrounds(
         room_image: ImageObj,
-        room_data: RoomData,
+        room_data: data.Room,
         semi_transparent: bool) -> None:
     color1 = _to_rgb(int(room_data.settings['General']['Gradient Top']))
     color2 = _to_rgb(int(room_data.settings['General']['Gradient Bottom']))
@@ -136,7 +133,7 @@ def _render_backgrounds(
 
 def _render_tiles(
         room_image: ImageObj,
-        room_data: RoomData,
+        room_data: data.Room,
         tile_set_images: Dict[str, ImageObj],
         mask_tiles: bool) -> None:
     black_image = _create_solid_tile_image((0, 0, 0, 255))
@@ -178,7 +175,7 @@ def _render_tiles(
 
 def _render_tile_modifiers(
         room_image: ImageObj,
-        room_data: RoomData,
+        room_data: data.Room,
         tile_modifier_tiles: Dict[str, ImageObj]) -> None:
     tile_modifiers = [
         sprite
@@ -207,8 +204,8 @@ def _render_tile_modifiers(
 
 def _render_objects(
         room_image: ImageObj,
-        room_data: RoomData,
-        world: World,
+        room_data: data.Room,
+        world: data.World,
         object_tiles: Dict[str, ImageObj],
         object_whitelist: List[str],
         layers: Any) -> None:
@@ -265,8 +262,10 @@ def _render_objects(
                     for i, band in enumerate(object_tile.split())
                 ])
             object_tile = object_tile.resize(
-                (int(object_tile.width * scale),
-                int(object_tile.height * scale)))
+                (
+                    int(object_tile.width * scale),
+                    int(object_tile.height * scale),
+                ))
             if flip:
                 object_tile = object_tile.transpose(Image.FLIP_LEFT_RIGHT)
             object_tile = object_tile.rotate(angle, expand=True)
@@ -289,7 +288,7 @@ def _render_objects(
 
 def _render_warps(
         room_image: ImageObj,
-        room_data: RoomData,
+        room_data: data.Room,
         outgoing_warps: WarpDict,
         incoming_warps: WarpDict) -> None:
     draw = ImageDraw.Draw(room_image)
@@ -299,7 +298,7 @@ def _render_warps(
         source_x, source_y = source_pos
         draw.text(
             (10, 10 + FONT_SIZE * i),
-            _get_room_name(source_x, source_y) + '\N{RIGHTWARDS ARROW}' ,
+            _get_room_name(source_x, source_y) + '\N{RIGHTWARDS ARROW}',
             font=font,
             fill=INCOMING_WARP_FONT_COLOR)
 
@@ -314,7 +313,7 @@ def _render_warps(
             fill=OUTGOING_WARP_FONT_COLOR)
 
 
-def _render_room_name(room_image: ImageObj, room_data: RoomData) -> None:
+def _render_room_name(room_image: ImageObj, room_data: data.Room) -> None:
     overlay_image = Image.new(size=room_image.size, mode='RGBA')
     draw = ImageDraw.Draw(overlay_image)
     font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
@@ -378,6 +377,7 @@ def _render_axes(geometry: util.Geometry, map_image: ImageObj) -> None:
 
     draw.rectangle((0, 0, AXIS_SIZE_X - 1, AXIS_SIZE_Y - 1), fill=AXIS_COLOR)
 
+
 def _create_map_image(geometry: util.Geometry) -> ImageObj:
     width = geometry.max_x + 1 - geometry.min_x
     height = geometry.max_y + 1 - geometry.min_y
@@ -399,7 +399,7 @@ def _create_room_image() -> ImageObj:
         color=DEFAULT_BACKGROUND)
 
 
-def _get_warp_data(world: World) -> Tuple[WarpDict, WarpDict]:
+def _get_warp_data(world: data.World) -> Tuple[WarpDict, WarpDict]:
     regex = r'room_set\((\d+),\s*(\d+)\)'
     outgoing_warps: WarpData = {}
     incoming_warps: WarpData = {}
@@ -420,7 +420,7 @@ def _get_warp_data(world: World) -> Tuple[WarpDict, WarpDict]:
 
 
 def render_world(
-        world: World,
+        world: data.World,
         render_backgrounds: bool,
         render_objects: bool,
         mask_tiles: bool,
@@ -428,7 +428,7 @@ def render_world(
     tile_set_images = _read_tile_set_images(world.game_dir)
     object_images = _read_object_images(world.game_dir)
 
-    tile_modifier_tiles = {
+    tile_modifier_images = {
         'Tile Modifier 0': _create_solid_tile_image((0, 255, 0, 200)),
         'Tile Modifier 1': _create_solid_tile_image((255, 0, 255, 200)),
         'Tile Modifier 2': _create_solid_tile_image((0, 255, 255, 200)),
@@ -474,7 +474,7 @@ def render_world(
             object_whitelist,
             range(7, 999))
         _render_tile_modifiers(
-            room_image, room_data, tile_modifier_tiles)
+            room_image, room_data, tile_modifier_images)
         _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
         _render_room_name(room_image, room_data)
 
