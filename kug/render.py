@@ -238,6 +238,7 @@ def _render_objects(
             angle = float(obj.get('Angle', 0))
             alpha = float(obj.get('Transparency Override', 255))
             coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
+            flip = bool(obj.get('Flip', False))
             color = (*_to_rgb(coeff), alpha)
             if layer not in layers:
                 continue
@@ -255,6 +256,8 @@ def _render_objects(
             object_tile = object_tile.resize(
                 (int(object_tile.width * scale),
                 int(object_tile.height * scale)))
+            if flip:
+                object_tile = object_tile.transpose(Image.FLIP_LEFT_RIGHT)
             object_tile = object_tile.rotate(angle, expand=True)
 
             x0 = float(obj['X'])
