@@ -232,14 +232,21 @@ def _render_objects(
 
     for obj in objects:
         try:
-            image_name = world.objects[obj['Object']]['Image']
+            world_obj = world.objects[obj['Object']]
+            image_name = world_obj['Image']
             layer = get_layer(obj)
             scale = float(obj.get('Scale Multiplier', 1))
             angle = float(obj.get('Angle', 0))
-            alpha = float(obj.get('Transparency Override', 255))
+            if 'Transparency Override' in obj:
+                alpha = float(obj['Transparency Override'])
+            elif 'Transparency Max' in world_obj:
+                alpha = float(world_obj['Transparency Max'])
+            else:
+                alpha = 255
             coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
             flip = bool(obj.get('Flip', False))
             color = (*_to_rgb(coeff), alpha)
+
             if layer not in layers:
                 continue
 
@@ -425,6 +432,7 @@ def render_world(
         'Kill Area 0',
         'Kill Area 1',
         'Kill Area 2',
+        'Fast Travel Sign 0',
     ]
 
     if not geometry:
