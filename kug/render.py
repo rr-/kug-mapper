@@ -206,22 +206,41 @@ def _render_objects(
         room_data: RoomData,
         world: World,
         object_tiles: Dict[str, ImageObj],
-        whitelist: List[str]) -> None:
+        object_whitelist: List[str],
+        layers: Any) -> None:
+
+    def get_layer(object):
+        try:
+            default = 0
+            if 'Layer Override' in object:
+                return float(object['Layer Override'])
+            if 'Object' in object and object['Object'] in world.objects:
+                return float(
+                    world.objects[object['Object']].get('Layer', default))
+            return default
+        except:
+            return default
+
     objects = [
         obj
         for obj in room_data.objects.values()
         if 'Object' in obj
-        and (whitelist is None or obj['Object'] in whitelist)
+        and (object_whitelist is None or obj['Object'] in object_whitelist)
         and 'X' in obj
         and 'Y' in obj]
+    objects = sorted(objects, key=get_layer)
+
     for obj in objects:
         try:
             image_name = world.objects[obj['Object']]['Image']
+            layer = get_layer(obj)
             scale = float(obj.get('Scale Multiplier', 1))
             angle = float(obj.get('Angle', 0))
             alpha = float(obj.get('Transparency Override', 255))
             coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
             color = (*_to_rgb(coeff), alpha)
+            if layer not in layers:
+                continue
 
             object_tile = object_tiles[image_name]
             object_tile = Image.merge(
@@ -426,8 +445,16 @@ def render_world(
             room_data,
             world,
             object_images,
-            obj_whitelist)
+            object_whitelist,
+            range(0, 7))
         _render_tiles(room_image, room_data, tile_set_images, mask_tiles)
+        _render_objects(
+            room_image,
+            room_data,
+            world,
+            object_images,
+            object_whitelist,
+            range(7, 999))
         _render_tile_modifiers(
             room_image, room_data, tile_modifier_tiles)
         _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
