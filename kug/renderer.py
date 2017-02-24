@@ -51,37 +51,38 @@ def _get_room_name(x: int, y: int) -> str:
     return _get_room_name_x(x) + _get_room_name_y(y)
 
 
-def _read_tile_set_images(game_dir: str) -> Dict[str, ImageObj]:
-    tile_set_images: Dict[str, ImageObj] = {}
-    tile_set_images['Null Tileset'] = (
-        Image.new(
-            mode='RGBA',
-            size=(
-                MAX_TILE_X * TILE_FULL_WIDTH,
-                MAX_TILE_Y * TILE_FULL_HEIGHT),
-            color=(255, 0, 0, 255)))
-    tile_set_dir = os.path.join(game_dir, 'Tilesets')
-    for entry in util.scan_tree(tile_set_dir):
-        name, _ = os.path.splitext(entry.name)
-        tile_set_images[name] = (
+@util.memoize
+def _read_tile_set_image(game_dir: str, name: str) -> ImageObj:
+    tile_set_path = os.path.join(game_dir, 'Tilesets', name + '.png')
+    if os.path.exists(tile_set_path):
+        return (
             Image
-            .open(os.path.join(tile_set_dir, entry.path))
+            .open(os.path.join(tile_set_path, tile_set_path))
             .convert('RGBA'))
-    return tile_set_images
+
+    return Image.new(
+        mode='RGBA',
+        size=(
+            MAX_TILE_X * TILE_FULL_WIDTH,
+            MAX_TILE_Y * TILE_FULL_HEIGHT),
+        color=(255, 0, 0, 255))
 
 
-def _read_object_images(game_dir: str) -> Dict[str, ImageObj]:
-    object_images: Dict[str, ImageObj] = {}
-    object_dir = os.path.join(game_dir, 'Objects')
-    for entry in util.scan_tree(object_dir):
-        name, ext = os.path.splitext(os.path.relpath(entry.path, object_dir))
-        if ext == '.ini':
-            continue
-        object_images[name] = (
-            Image
-            .open(os.path.join(object_dir, entry.path))
-            .convert('RGBA'))
-    return object_images
+@util.memoize
+def _read_tile_image(game_dir: str, name: str, x: int, y: int) -> ImageObj:
+    return (
+        _read_tile_set_image(game_dir, name)
+        .crop((
+            x * TILE_FULL_WIDTH,
+            y * TILE_FULL_HEIGHT,
+            (x + 1) * TILE_FULL_WIDTH,
+            (y + 1) * TILE_FULL_HEIGHT)))
+
+
+@util.memoize
+def _read_object_image(game_dir: str, name: str) -> ImageObj:
+    object_path = os.path.join(game_dir, 'Objects', name + '.png')
+    return Image.open(object_path).convert('RGBA')
 
 
 def _create_solid_tile_image(color: Color) -> ImageObj:
@@ -134,7 +135,6 @@ def _render_backgrounds(
 def _render_tiles(
         room_image: ImageObj,
         room_data: data.Room,
-        tile_set_images: Dict[str, ImageObj],
         mask_tiles: bool) -> None:
     black_image = _create_solid_tile_image((0, 0, 0, 255))
     tile_set_names = [
@@ -154,15 +154,11 @@ def _render_tiles(
         tile_set_x = int(tile_str[1])
         tile_set_y = int(tile_str[2])
         tile_image = (
-            tile_set_images
-            .get(
+            _read_tile_image(
+                room_data.world.game_dir,
                 tile_set_names[tile_set_index],
-                tile_set_images['Null Tileset'])
-            .crop((
-                tile_set_x * TILE_FULL_WIDTH,
-                tile_set_y * TILE_FULL_HEIGHT,
-                (tile_set_x + 1) * TILE_FULL_WIDTH,
-                (tile_set_y + 1) * TILE_FULL_HEIGHT)))
+                tile_set_x,
+                tile_set_y))
 
         room_image.paste(
             black_image if mask_tiles else tile_image,
@@ -206,7 +202,6 @@ def _render_objects(
         room_image: ImageObj,
         room_data: data.Room,
         world: data.World,
-        object_tiles: Dict[str, ImageObj],
         object_whitelist: List[str],
         layers: Any) -> None:
 
@@ -251,7 +246,8 @@ def _render_objects(
             if layer not in layers:
                 continue
 
-            object_tile = object_tiles[image_name]
+            object_tile = _read_object_image(
+                room_data.world.game_dir, image_name)
             object_tile = Image.merge(
                 'RGBA',
                 [
@@ -425,14 +421,12 @@ def render_world(
         render_objects: bool,
         mask_tiles: bool,
         geometry: Optional[util.Geometry]):
-    tile_set_images = _read_tile_set_images(world.game_dir)
-    object_images = _read_object_images(world.game_dir)
-
     tile_modifier_images = {
         'Tile Modifier 0': _create_solid_tile_image((0, 255, 0, 200)),
         'Tile Modifier 1': _create_solid_tile_image((255, 0, 255, 200)),
         'Tile Modifier 2': _create_solid_tile_image((0, 255, 255, 200)),
     }
+
     object_whitelist = [
         'Kill Area 0',
         'Kill Area 1',
@@ -462,15 +456,13 @@ def render_world(
             room_image,
             room_data,
             world,
-            object_images,
             object_whitelist,
             range(0, 7))
-        _render_tiles(room_image, room_data, tile_set_images, mask_tiles)
+        _render_tiles(room_image, room_data, mask_tiles)
         _render_objects(
             room_image,
             room_data,
             world,
-            object_images,
             object_whitelist,
             range(7, 999))
         _render_tile_modifiers(

@@ -84,3 +84,12 @@ def spreadsheet_notation_to_number(input: str) -> int:
         ret += alphabet.index(input[0]) + 1
         input = input[1:]
     return ret
+
+
+def memoize(f):
+    results = {}
+    def helper(*args):
+        if args not in results:
+            results[args] = f(*args)
+        return results[args]
+    return helper
