@@ -187,7 +187,7 @@ def _render_tile_modifiers(
             and int(sprite.get('Y')) == room_y]
         if not tile_modifiers:
             continue
-        for name in tile_modifier_names:
+        for name in set(tile_modifier_names):
             room_image.paste(
                 tile_modifier_tiles[name],
                 (
