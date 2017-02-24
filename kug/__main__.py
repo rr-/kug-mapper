@@ -28,6 +28,7 @@ def main() -> None:
     scale: int = args.scale
     output_path: str = args.output_path
 
+    sprites = data_reader.read_sprites(game_dir)
     world = data_reader.read_world(game_dir, geometry)
     if geometry:
         geometry.min_x = max(0, geometry.min_x)
@@ -35,8 +36,31 @@ def main() -> None:
         geometry.max_x = min(world.width - 1, geometry.max_x)
         geometry.max_y = min(world.height - 1, geometry.max_y)
 
+    if render_backgrounds:
+        if render_objects:
+            backgrounds_opacity = 1.0
+        else:
+            backgrounds_opacity = 0.5
+    else:
+        backgrounds_opacity = 0.0
+
+    if render_objects:
+        object_whitelist = None
+    else:
+        object_whitelist = [
+            'Kill Area 0',
+            'Kill Area 1',
+            'Kill Area 2',
+            'Fast Travel Sign 0',
+        ]
+
     map_image = renderer.render_world(
-        world, render_backgrounds, render_objects, mask_tiles, geometry)
+        world,
+        sprites,
+        backgrounds_opacity,
+        object_whitelist,
+        mask_tiles,
+        geometry)
 
     (
         map_image

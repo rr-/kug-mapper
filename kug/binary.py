@@ -18,5 +18,3 @@ def read_zero_string(handle: io.BufferedReader) -> str:
             break
         ret += bytes([byte])
     return ret.decode('utf-8')
-
-

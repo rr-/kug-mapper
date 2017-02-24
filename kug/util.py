@@ -6,11 +6,6 @@ from typing import Iterator, Optional, Any, Tuple, List
 
 
 class Geometry:
-    min_x: int
-    max_y: int
-    min_x: int
-    max_y: int
-
     def __init__(self, min_x: int, min_y: int, max_x: int, max_y: int) -> None:
         self.min_x = min_x
         self.min_y = min_y
@@ -88,8 +83,10 @@ def spreadsheet_notation_to_number(input: str) -> int:
 
 def memoize(f):
     results = {}
+
     def helper(*args):
         if args not in results:
             results[args] = f(*args)
         return results[args]
+
     return helper

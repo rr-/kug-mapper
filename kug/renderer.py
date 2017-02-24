@@ -1,9 +1,10 @@
 import os
 import sys
+import io
 import re
 import math
 import random
-from typing import Any, Optional, Union, Tuple, List, Dict
+from typing import Any, Optional, Union, Tuple, Set, List, Dict
 from PIL import Image, ImageFont, ImageDraw, ImageMath
 from kug import data, util
 
@@ -37,6 +38,133 @@ AXIS_COLOR = 'black'
 AXIS_FONT_COLOR = 'white'
 ROOM_NAME_FONT_COLOR = (128, 128, 128, 128)
 DEFAULT_BACKGROUND = (255, 225, 205)
+
+SPRITE_DEFINITIONS = {
+    'Tile Modifier 0': ((0, 255, 0, 200), -6, -6, 1),  # secret passage
+    'Tile Modifier 1': ((255, 0, 255, 200), -6, -6, 1),  # earthquake
+    'Tile Modifier 2': ((0, 255, 255, 200), -6, -6, 1),  # ?
+
+    'NPC 0': (283, 0, 0, 1),
+    'NPC 1': (283, 0, 0, 1),
+    'NPC 2': (283, 0, 0, 1),
+    'NPC 3': (283, 0, 0, 1),
+    'NPC 4': (283, 0, 0, 1),
+    'NPC 5': (283, 0, 0, 1),
+    'NPC 6': (283, 0, 0, 1),
+    'NPC 7': (283, 0, 0, 1),
+    'NPC 8': (283, 0, 0, 1),
+    'NPC 9': (283, 0, 0, 1),
+    'NPC 10': (283, 0, 0, 1),
+    'NPC 11': (283, 0, 0, 1),
+    'NPC 12': (283, 0, 0, 1),
+    'NPC 13': (283, 0, 0, 1),
+    'NPC 14': (283, 0, 0, 1),
+    'NPC 15': (283, 0, 0, 1),
+    'NPC 16': (283, 0, 0, 1),
+    'NPC 17': (283, 0, 0, 1),
+    'NPC 18': (283, 0, 0, 1),
+    'NPC 19': (283, 0, 0, 1),
+    'NPC 20': (283, 0, 0, 1),
+    'NPC 21': (283, 0, 0, 1),
+    'NPC 22': (283, 0, 0, 1),
+    'NPC 23': (283, 0, 0, 1),
+    'NPC 24': (283, 0, 0, 1),
+    'NPC 25': (283, 0, 0, 1),
+    'NPC 26': (283, 0, 0, 1),
+    'NPC 27': (283, 0, 0, 1),
+    'NPC 28': (283, 0, 0, 1),
+    'NPC 29': (283, 0, 0, 1),
+    'NPC 30': (283, 0, 0, 1),
+    'NPC 31': (283, 0, 0, 1),
+    'NPC 32': (283, 0, 0, 1),
+    'NPC 33': (283, 0, 0, 1),
+    'NPC 34': (283, 0, 0, 1),
+    'NPC 35': (283, 0, 0, 1),
+    'NPC 36': (283, 0, 0, 1),
+    'NPC 37': (283, 0, 0, 1),
+    'NPC 38': (283, 0, 0, 1),
+    'NPC 39': (283, 0, 0, 1),
+    'NPC 40': (283, 0, 0, 1),
+    'NPC 41': (283, 0, 0, 1),
+    'NPC 42': (283, 0, 0, 1),
+    'NPC 43': (283, 0, 0, 1),
+    'NPC 44': (283, 0, 0, 1),
+    'NPC 45': (283, 0, 0, 1),
+    'NPC 46': (283, 0, 0, 1),
+    'NPC 47': (283, 0, 0, 1),
+    'NPC 48': (283, 0, 0, 1),
+    'NPC 49': (283, 0, 0, 1),
+    'NPC 50': (283, 0, 0, 1),
+    'NPC 51': (283, 0, 0, 1),
+    'NPC 52': (283, 0, 0, 1),
+    'NPC 53': (283, 0, 0, 1),
+    'NPC 54': (283, 0, 0, 1),
+    'NPC 55': (283, 0, 0, 1),
+    'NPC 56': (283, 0, 0, 1),
+    'NPC 57': (283, 0, 0, 1),
+    'NPC 58': (283, 0, 0, 1),
+    'NPC 59': (283, 0, 0, 1),
+    'NPC 60': (283, 0, 0, 1),
+    'NPC 61': (283, 0, 0, 1),
+    'NPC 62': (283, 0, 0, 1),
+    'NPC 63': (283, 0, 0, 1),
+    'NPC 64': (283, 0, 0, 1),
+    'NPC 65': (283, 0, 0, 1),
+    'NPC 66': (283, 0, 0, 1),
+    'NPC 67': (283, 0, 0, 1),
+    'NPC 68': (283, 0, 0, 1),
+    'NPC 69': (283, 0, 0, 1),
+
+    'Orb 0': (296, 0, 0, 1),  # red orb
+    'Orb 1': (290, 0, 0, 1),  # green orb
+    'Orb 2': (295, 0, 0, 1),  # blue orb
+    'Orb 3': (892, 0, 0, 1),  # white orb
+    'Orb 4': (2606, 0, 0, 1),  # yellow orb
+    'Orb 5': (2084, 0, 0, 1),  # pink orb
+
+    'Bouncy Ring 0': (1417, 0, 0, 1),
+    'Bell 0': (1151, 0, 0, 0),
+    'Warp Symbol 0': (11964, 0, 0, 1), # warp scribblings (twilight zone)
+    'Warp Symbol 1': (11964, 0, 0, 1), # warp scribblings (outside world)
+    'Save Point 0': (178, 0, -16, 1),
+
+    'Green Switch 0': (1400, 0, 0, 1), # green block button
+    'Time Block 0': (706, 0, 0, 1),  # green block, standard variant
+    'Time Block 1': (706, 0, 0, 1),  # green block, rare variant
+
+    'Blue Switch 0': (1109, 0, 0, 1),  # blue block button
+    'Switch Block 0': (1143, 0, 0, 1), # blue block
+
+    'Red Switch 0': (887, 0, 0, 1),  # red block button
+    'Switch Block 1': (1140, 0, 0, 1), # red block
+
+    'Grey Switch 0': (1403, 0, 20, 1), # grey door button
+    'Door 0': (1404, -12, -32, 1),  # grey door
+    'Door 1': (1600, -12, -32, 1),  # red door
+    'Door 2': (2062, -12, -32, 1),  # green door
+    'Door 3': (1601, -12, -32, 1),  # bell door
+
+    'Lava 0': (18160, 0, 2, 0),  # horizontal lava, upper layer
+    'Lava 1': (23065, -6, -6, 0),  # horizontal lava, lower layer
+    'Lava 2': (18370, 8, 0, 0),  # lava pillar
+    'Lava 3': (18379, 0, 0, 0),  # lava pillar end
+    'Lava 4': (18478, 0, 0, 0),  # lava pillar start (from left)
+    'Lava 5': (18572, 0, 0, 0),  # lava pillar start (from right)
+
+    'Slime 0': (3251, 0, 2, 0),  # horizontal slime, upper layer
+    'Slime 1': (23061, -6, -6, 0),  # horizontal slime, lower layer
+    'Slime 2': (3861, -8, 0, 0),  # slime pillar
+    'Slime 3': (3722, 0, 0, 0),  # horizontal slime corner, \
+    'Slime 4': (3738, 0, 0, 0),  # horizontal slime corner, /
+    'Slime 5': (3589, 0, 0, 0),  # slime fountain
+}
+
+
+def _parse_float(x: Any) -> Optional[float]:
+    try:
+        return float(re.sub(r'[^\d\.]', '', str(x).replace(',', '.')))
+    except ValueError:
+        return None
 
 
 def _get_room_name_x(x: int) -> str:
@@ -85,6 +213,17 @@ def _read_object_image(game_dir: str, name: str) -> ImageObj:
     return Image.open(object_path).convert('RGBA')
 
 
+@util.memoize
+def _create_sprite_image(
+        sprites: data.SpriteArchive,
+        sprite_id: Union[int, Color]) -> ImageObj:
+    if type(sprite_id) is int:
+        content = sprites.read(sprite_id)
+        return Image.open(io.BytesIO(content)).convert('RGBA')
+    else:
+        return _create_solid_tile_image(sprite_id)
+
+
 def _create_solid_tile_image(color: Color) -> ImageObj:
     image = Image.new(
         mode='RGBA',
@@ -118,15 +257,14 @@ def _mix_rgb(color1: Color, color2: Color, delta: float) -> Color:
 def _render_backgrounds(
         room_image: ImageObj,
         room_data: data.Room,
-        semi_transparent: bool) -> None:
+        opacity: float) -> None:
     color1 = _to_rgb(int(room_data.settings['General']['Gradient Top']))
     color2 = _to_rgb(int(room_data.settings['General']['Gradient Bottom']))
     draw = ImageDraw.Draw(room_image)
     for room_y in range(ROOM_HEIGHT * TILE_HEIGHT):
         new_color = _mix_rgb(
             color1, color2, room_y / (ROOM_HEIGHT * TILE_HEIGHT))
-        if semi_transparent:
-            new_color = _mix_rgb(DEFAULT_BACKGROUND, new_color, 0.5)
+        new_color = _mix_rgb(DEFAULT_BACKGROUND, new_color, opacity)
         draw.rectangle(
             (0, room_y, room_image.width, room_y),
             fill=new_color)
@@ -169,33 +307,32 @@ def _render_tiles(
             tile_image)
 
 
-def _render_tile_modifiers(
+def _render_sprites(
         room_image: ImageObj,
         room_data: data.Room,
-        tile_modifier_tiles: Dict[str, ImageObj]) -> None:
-    tile_modifiers = [
-        sprite
-        for sprite in room_data.sprites.values()
-        if 'Sprite' in sprite
-        and 'X' in sprite
-        and 'Y' in sprite
-        and sprite.get('Sprite') in tile_modifier_tiles]
+        sprites: data.SpriteArchive,
+        layer_to_draw: int) -> None:
     for room_x, room_y in util.range2d(ROOM_WIDTH, ROOM_HEIGHT):
-        tile_modifier_names = [
-            sprite.get('Sprite')
-            for sprite in tile_modifiers
-            if int(sprite.get('X')) == room_x
-            and int(sprite.get('Y')) == room_y]
-        if not tile_modifiers:
-            continue
-        for name in set(tile_modifier_names):
+        for sprite_id, offset_x, offset_y, layer in [
+                SPRITE_DEFINITIONS[sprite['Sprite']]
+                for key, sprite in room_data.sprites.items()
+                if key != 'Null Sprite'
+                and 'Sprite' in sprite
+                and 'X' in sprite
+                and 'Y' in sprite
+                and sprite['Sprite'] in SPRITE_DEFINITIONS
+                and int(sprite['X']) == room_x
+                and int(sprite['Y']) == room_y]:
+            if layer != layer_to_draw:
+                continue
+            sprite_image = _create_sprite_image(sprites, sprite_id)
             room_image.paste(
-                tile_modifier_tiles[name],
+                sprite_image,
                 (
-                    room_x * TILE_WIDTH - TILE_BORDER_WIDTH,
-                    room_y * TILE_HEIGHT - TILE_BORDER_HEIGHT,
+                    room_x * TILE_WIDTH + offset_x,
+                    room_y * TILE_HEIGHT + offset_y,
                 ),
-                tile_modifier_tiles[name])
+                sprite_image)
 
 
 def _render_objects(
@@ -208,12 +345,14 @@ def _render_objects(
     def get_layer(object):
         try:
             default = 0
+            ret = None
             if 'Layer Override' in object:
-                return float(object['Layer Override'])
-            if 'Object' in object and object['Object'] in world.objects:
-                return float(
-                    world.objects[object['Object']].get('Layer', default))
-            return default
+                ret = _parse_float(object['Layer Override'])
+            if (ret is None
+                    and 'Object' in object
+                    and object['Object'] in world.objects):
+                ret = _parse_float(world.objects[object['Object']].get('Layer'))
+            return ret or default
         except:
             return default
 
@@ -221,65 +360,65 @@ def _render_objects(
         obj
         for obj in room_data.objects.values()
         if 'Object' in obj
+        and obj['Object'] in world.objects
         and (object_whitelist is None or obj['Object'] in object_whitelist)
         and 'X' in obj
         and 'Y' in obj]
     objects = sorted(objects, key=get_layer)
 
     for obj in objects:
-        try:
-            world_obj = world.objects[obj['Object']]
-            image_name = world_obj['Image']
-            layer = get_layer(obj)
-            scale = float(obj.get('Scale Multiplier', 1))
-            angle = float(obj.get('Angle', 0))
-            if 'Transparency Override' in obj:
-                alpha = float(obj['Transparency Override'])
-            elif 'Transparency Max' in world_obj:
-                alpha = float(world_obj['Transparency Max'])
-            else:
-                alpha = 255
-            coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
-            flip = bool(obj.get('Flip', False))
-            color = (*_to_rgb(coeff), alpha)
+        world_obj = world.objects[obj['Object']]
+        image_name = world_obj['Image']
+        layer = get_layer(obj)
+        if 'Scale Multiplier' in obj:
+            scale = _parse_float(obj['Scale Multiplier']) or 1
+        elif 'Scale Min' in world_obj:
+            scale = _parse_float(world_obj['Scale Min']) / 100.0 or 1
+        angle = _parse_float(obj.get('Angle')) or 0
+        if 'Transparency Override' in obj:
+            alpha = _parse_float(obj['Transparency Override']) or 255
+        elif 'Transparency Max' in world_obj:
+            alpha = _parse_float(world_obj['Transparency Max']) or 255
+        else:
+            alpha = 255
+        coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
+        flip = bool(obj.get('Flip', False))
+        color = (*_to_rgb(coeff), alpha)
 
-            if layer not in layers:
-                continue
+        if layer not in layers:
+            continue
 
-            object_tile = _read_object_image(
-                room_data.world.game_dir, image_name)
-            object_tile = Image.merge(
-                'RGBA',
-                [
-                    ImageMath.eval(
-                        'convert(convert(image, "F") * coeff, "L")',
-                        image=band,
-                        coeff=color[i] / 255.)
-                    for i, band in enumerate(object_tile.split())
-                ])
-            object_tile = object_tile.resize(
-                (
-                    int(object_tile.width * scale),
-                    int(object_tile.height * scale),
-                ))
-            if flip:
-                object_tile = object_tile.transpose(Image.FLIP_LEFT_RIGHT)
-            object_tile = object_tile.rotate(angle, expand=True)
+        object_tile = _read_object_image(
+            room_data.world.game_dir, image_name)
+        object_tile = Image.merge(
+            'RGBA',
+            [
+                ImageMath.eval(
+                    'convert(convert(image, "F") * coeff, "L")',
+                    image=band,
+                    coeff=color[i] / 255.)
+                for i, band in enumerate(object_tile.split())
+            ])
+        object_tile = object_tile.resize(
+            (
+                int(object_tile.width * scale),
+                int(object_tile.height * scale),
+            ))
+        if flip:
+            object_tile = object_tile.transpose(Image.FLIP_LEFT_RIGHT)
+        object_tile = object_tile.rotate(angle, expand=True)
 
-            x0 = float(obj['X'])
-            y0 = float(obj['Y'])
-            x1 = x0 - object_tile.width / 2
-            y1 = y0 - object_tile.height / 2
-            hx = float(world.objects[obj['Object']].get('X Hotspot', 0))
-            hy = float(world.objects[obj['Object']].get('Y Hotspot', 0))
-            hotspot_theta = math.atan2(hy, hx) - math.radians(angle)
-            hotspot_delta = math.sqrt(hx * hx + hy * hy)
-            x2 = x1 - hotspot_delta * math.cos(hotspot_theta)
-            y2 = y1 - hotspot_delta * math.sin(hotspot_theta)
-            room_image.paste(object_tile, (int(x2), int(y2)), object_tile)
-
-        except Exception as ex:
-            print(ex, file=sys.stderr)
+        x0 = _parse_float(obj['X']) or 0
+        y0 = _parse_float(obj['Y']) or 0
+        x1 = x0 - object_tile.width / 2
+        y1 = y0 - object_tile.height / 2
+        hx = _parse_float(world.objects[obj['Object']].get('X Hotspot')) or 0
+        hy = _parse_float(world.objects[obj['Object']].get('Y Hotspot')) or 0
+        hotspot_theta = math.atan2(hy, hx) - math.radians(angle)
+        hotspot_delta = math.sqrt(hx * hx + hy * hy)
+        x2 = x1 - hotspot_delta * math.cos(hotspot_theta)
+        y2 = y1 - hotspot_delta * math.sin(hotspot_theta)
+        room_image.paste(object_tile, (int(x2), int(y2)), object_tile)
 
 
 def _render_warps(
@@ -397,8 +536,8 @@ def _create_room_image() -> ImageObj:
 
 def _get_warp_data(world: data.World) -> Tuple[WarpDict, WarpDict]:
     regex = r'room_set\((\d+),\s*(\d+)\)'
-    outgoing_warps: WarpData = {}
-    incoming_warps: WarpData = {}
+    outgoing_warps: WarpDict = {}
+    incoming_warps: WarpDict = {}
     for world_x, world_y in util.range2d(
             0, 0, world.width + 1, world.height + 1):
         for match in re.findall(regex, world[world_x, world_y].script or ''):
@@ -415,27 +554,20 @@ def _get_warp_data(world: data.World) -> Tuple[WarpDict, WarpDict]:
     return outgoing_warps, incoming_warps
 
 
+def _report_unknown_sprites(
+        known_names: Set[str], all_names: Set[str]) -> None:
+    for name in sorted(all_names):
+        if name not in known_names:
+            print('Skipped sprite %s' % name, file=sys.stderr)
+
+
 def render_world(
         world: data.World,
-        render_backgrounds: bool,
-        render_objects: bool,
+        sprites: data.SpriteArchive,
+        backgrounds_opacity: float,
+        object_whitelist: List[str],
         mask_tiles: bool,
         geometry: Optional[util.Geometry]):
-    tile_modifier_images = {
-        'Tile Modifier 0': _create_solid_tile_image((0, 255, 0, 200)),
-        'Tile Modifier 1': _create_solid_tile_image((255, 0, 255, 200)),
-        'Tile Modifier 2': _create_solid_tile_image((0, 255, 255, 200)),
-    }
-
-    object_whitelist = [
-        'Kill Area 0',
-        'Kill Area 1',
-        'Kill Area 2',
-        'Fast Travel Sign 0',
-    ]
-    if render_objects:
-        object_whitelist = None
-
     if not geometry:
         geometry = util.Geometry(0, 0, world.width - 1, world.height - 1)
 
@@ -450,14 +582,15 @@ def render_world(
         room_image = _create_room_image()
         room_data = world[world_x, world_y]
 
-        if render_backgrounds:
-            _render_backgrounds(room_image, room_data, not render_objects)
+        if backgrounds_opacity:
+            _render_backgrounds(room_image, room_data, backgrounds_opacity)
         _render_objects(
             room_image,
             room_data,
             world,
             object_whitelist,
             range(0, 7))
+        _render_sprites(room_image, room_data, sprites, 0)
         _render_tiles(room_image, room_data, mask_tiles)
         _render_objects(
             room_image,
@@ -465,8 +598,7 @@ def render_world(
             world,
             object_whitelist,
             range(7, 999))
-        _render_tile_modifiers(
-            room_image, room_data, tile_modifier_images)
+        _render_sprites(room_image, room_data, sprites, 1)
         _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
         _render_room_name(room_image, room_data)
 
@@ -482,4 +614,17 @@ def render_world(
             ))
 
     _render_axes(geometry, map_image)
+
+    _report_unknown_sprites(
+        set(SPRITE_DEFINITIONS.keys()),
+        set([
+            sprite['Sprite']
+            for room in world
+            if room.sprites
+            for sprite in room.sprites.values()
+            if 'X' in sprite
+            and 'Y' in sprite
+            and 'Sprite' in sprite
+        ]))
+
     return map_image

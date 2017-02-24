@@ -1,5 +1,27 @@
-from kug.util import range2d
-from typing import Any, Optional, Tuple, Dict
+import io
+from typing import Any, Optional, Tuple, List, Dict
+from kug import binary, util
+
+
+class SpriteArchive:
+    def __init__(self, path: str, offsets: Dict[int, int]) -> None:
+        self._offsets = offsets
+        self._path = path
+        with open(path, 'rb') as handle:
+            handle.seek(0, io.SEEK_END)
+            file_size = handle.tell()
+            self._all_offsets = list(
+                sorted(list(offsets.values()) + [file_size]))
+
+    def __len__(self) -> int:
+        return len(self._offsets)
+
+    def read(self, index: int) -> bytes:
+        offset = self._offsets[index]
+        with open(self._path, 'rb') as handle:
+            handle.seek(offset + 16)
+            size = [x for x in self._all_offsets if x > offset][0] - offset
+            return handle.read(size)
 
 
 class Room:
@@ -28,8 +50,11 @@ class World:
         self.height = height
         self.objects: Optional[Dict] = None
         self.room_data: Dict[Tuple[int, int], Room] = {}
-        for x, y in range2d(self.width + 1, self.height + 1):
+        for x, y in util.range2d(self.width + 1, self.height + 1):
             self.room_data[x, y] = Room(self, x, y)
 
     def __getitem__(self, key):
         return self.room_data[key]
+
+    def __iter__(self):
+        return iter(self.room_data.values())
