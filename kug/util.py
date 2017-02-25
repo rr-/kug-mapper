@@ -76,7 +76,7 @@ def spreadsheet_notation_to_number(input: str) -> int:
     alphabet = string.ascii_uppercase
     while input:
         ret *= 26
-        ret += alphabet.index(input[0]) + 1
+        ret += alphabet.index(input[0].upper()) + 1
         input = input[1:]
     return ret
 
