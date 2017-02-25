@@ -7,14 +7,26 @@ from kug import util, data_reader, renderer
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+
+    def add_boolean_option(name, dest):
+        nonlocal parser
+        parser.add_argument(name, dest=dest, action='store_true')
+        parser.add_argument(
+            name.replace('--', '--no-'), dest=dest, action='store_false')
+
     parser.add_argument('--game-dir', default=(
         '~/.local/share/Steam/steamapps/common/Knytt Underground/World'))
-    parser.add_argument('--geometry', default='*')
-    parser.add_argument('--render-backgrounds', type=bool, default=False)
-    parser.add_argument('--render-objects', type=bool, default=False)
-    parser.add_argument('--mask-tiles', type=bool, default=True)
-    parser.add_argument('--scale', type=int, default=4)
     parser.add_argument('--output-path', type=str, default='map.png')
+    parser.add_argument('--geometry', default='*')
+    parser.add_argument('--scale', type=int, default=4)
+    add_boolean_option('--render-backgrounds', dest='render_backgrounds')
+    add_boolean_option('--render-objects', dest='render_objects')
+    add_boolean_option('--mask-tiles', dest='mask_tiles')
+
+    parser.set_defaults(
+        render_backgrounds=False,
+        render_objects=False,
+        mask_tiles=True)
     return parser.parse_args()
 
 
