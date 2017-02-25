@@ -408,12 +408,13 @@ def _render_objects(
 
     objects = [
         obj
-        for obj in room_data.objects.values()
-        if 'Object' in obj
-        and obj['Object'] in world.objects
-        and (objects_whitelist is None or obj['Object'] in objects_whitelist)
+        for key, obj in room_data.objects.items()
+        if key != 'Null Object'
+        and 'Object' in obj
         and 'X' in obj
-        and 'Y' in obj]
+        and 'Y' in obj
+        and obj['Object'] in world.objects
+        and (objects_whitelist is None or obj['Object'] in objects_whitelist)]
     objects = sorted(objects, key=get_layer)
 
     for obj in objects:
