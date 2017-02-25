@@ -40,123 +40,150 @@ ROOM_NAME_FONT_COLOR = (128, 128, 128, 128)
 DEFAULT_BACKGROUND = (255, 225, 205)
 
 SPRITE_DEFINITIONS = {
-    'Tile Modifier 0': ((0, 255, 0, 200), -6, -6, 1),  # secret passage
-    'Tile Modifier 1': ((255, 0, 255, 200), -6, -6, 1),  # earthquake
-    'Tile Modifier 2': ((0, 255, 255, 200), -6, -6, 1),  # ?
+    'Tile Modifier 0': ((0, 255, 0, 200), -6, -6, 1, 0),  # secret passage
+    'Tile Modifier 1': ((255, 0, 255, 200), -6, -6, 1, 0),  # earthquake
+    'Tile Modifier 2': ((0, 255, 255, 200), -6, -6, 1, 0),  # ?
 
-    'NPC 0': (283, 0, 0, 1),
-    'NPC 1': (283, 0, 0, 1),
-    'NPC 2': (283, 0, 0, 1),
-    'NPC 3': (283, 0, 0, 1),
-    'NPC 4': (283, 0, 0, 1),
-    'NPC 5': (283, 0, 0, 1),
-    'NPC 6': (283, 0, 0, 1),
-    'NPC 7': (283, 0, 0, 1),
-    'NPC 8': (283, 0, 0, 1),
-    'NPC 9': (283, 0, 0, 1),
-    'NPC 10': (283, 0, 0, 1),
-    'NPC 11': (283, 0, 0, 1),
-    'NPC 12': (283, 0, 0, 1),
-    'NPC 13': (283, 0, 0, 1),
-    'NPC 14': (283, 0, 0, 1),
-    'NPC 15': (283, 0, 0, 1),
-    'NPC 16': (283, 0, 0, 1),
-    'NPC 17': (283, 0, 0, 1),
-    'NPC 18': (283, 0, 0, 1),
-    'NPC 19': (283, 0, 0, 1),
-    'NPC 20': (283, 0, 0, 1),
-    'NPC 21': (283, 0, 0, 1),
-    'NPC 22': (283, 0, 0, 1),
-    'NPC 23': (283, 0, 0, 1),
-    'NPC 24': (283, 0, 0, 1),
-    'NPC 25': (283, 0, 0, 1),
-    'NPC 26': (283, 0, 0, 1),
-    'NPC 27': (283, 0, 0, 1),
-    'NPC 28': (283, 0, 0, 1),
-    'NPC 29': (283, 0, 0, 1),
-    'NPC 30': (283, 0, 0, 1),
-    'NPC 31': (283, 0, 0, 1),
-    'NPC 32': (283, 0, 0, 1),
-    'NPC 33': (283, 0, 0, 1),
-    'NPC 34': (283, 0, 0, 1),
-    'NPC 35': (283, 0, 0, 1),
-    'NPC 36': (283, 0, 0, 1),
-    'NPC 37': (283, 0, 0, 1),
-    'NPC 38': (283, 0, 0, 1),
-    'NPC 39': (283, 0, 0, 1),
-    'NPC 40': (283, 0, 0, 1),
-    'NPC 41': (283, 0, 0, 1),
-    'NPC 42': (283, 0, 0, 1),
-    'NPC 43': (283, 0, 0, 1),
-    'NPC 44': (283, 0, 0, 1),
-    'NPC 45': (283, 0, 0, 1),
-    'NPC 46': (283, 0, 0, 1),
-    'NPC 47': (283, 0, 0, 1),
-    'NPC 48': (283, 0, 0, 1),
-    'NPC 49': (283, 0, 0, 1),
-    'NPC 50': (283, 0, 0, 1),
-    'NPC 51': (283, 0, 0, 1),
-    'NPC 52': (283, 0, 0, 1),
-    'NPC 53': (283, 0, 0, 1),
-    'NPC 54': (283, 0, 0, 1),
-    'NPC 55': (283, 0, 0, 1),
-    'NPC 56': (283, 0, 0, 1),
-    'NPC 57': (283, 0, 0, 1),
-    'NPC 58': (283, 0, 0, 1),
-    'NPC 59': (283, 0, 0, 1),
-    'NPC 60': (283, 0, 0, 1),
-    'NPC 61': (283, 0, 0, 1),
-    'NPC 62': (283, 0, 0, 1),
-    'NPC 63': (283, 0, 0, 1),
-    'NPC 64': (283, 0, 0, 1),
-    'NPC 65': (283, 0, 0, 1),
-    'NPC 66': (283, 0, 0, 1),
-    'NPC 67': (283, 0, 0, 1),
-    'NPC 68': (283, 0, 0, 1),
-    'NPC 69': (283, 0, 0, 1),
+    # these seem to be special
+    'Function 0': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 1': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 2': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 3': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 4': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 5': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 6': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 7': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 8': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 9': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
+    'Function 12': ((0, 0, 255, 100), -6, -6, 1, 0),  # ?
 
-    'Orb 0': (296, 0, 0, 1),  # red orb
-    'Orb 1': (290, 0, 0, 1),  # green orb
-    'Orb 2': (295, 0, 0, 1),  # blue orb
-    'Orb 3': (892, 0, 0, 1),  # white orb
-    'Orb 4': (2606, 0, 0, 1),  # yellow orb
-    'Orb 5': (2084, 0, 0, 1),  # pink orb
+    'NPC 0': (283, 0, 0, 1, 0),
+    'NPC 1': (283, 0, 0, 1, 0),
+    'NPC 2': (283, 0, 0, 1, 0),
+    'NPC 3': (283, 0, 0, 1, 0),
+    'NPC 4': (283, 0, 0, 1, 0),
+    'NPC 5': (283, 0, 0, 1, 0),
+    'NPC 6': (283, 0, 0, 1, 0),
+    'NPC 7': (283, 0, 0, 1, 0),
+    'NPC 8': (283, 0, 0, 1, 0),
+    'NPC 9': (283, 0, 0, 1, 0),
+    'NPC 10': (283, 0, 0, 1, 0),
+    'NPC 11': (283, 0, 0, 1, 0),
+    'NPC 12': (283, 0, 0, 1, 0),
+    'NPC 13': (283, 0, 0, 1, 0),
+    'NPC 14': (283, 0, 0, 1, 0),
+    'NPC 15': (283, 0, 0, 1, 0),
+    'NPC 16': (283, 0, 0, 1, 0),
+    'NPC 17': (283, 0, 0, 1, 0),
+    'NPC 18': (283, 0, 0, 1, 0),
+    'NPC 19': (283, 0, 0, 1, 0),
+    'NPC 20': (283, 0, 0, 1, 0),
+    'NPC 21': (283, 0, 0, 1, 0),
+    'NPC 22': (283, 0, 0, 1, 0),
+    'NPC 23': (283, 0, 0, 1, 0),
+    'NPC 24': (283, 0, 0, 1, 0),
+    'NPC 25': (283, 0, 0, 1, 0),
+    'NPC 26': (283, 0, 0, 1, 0),
+    'NPC 27': (283, 0, 0, 1, 0),
+    'NPC 28': (283, 0, 0, 1, 0),
+    'NPC 29': (283, 0, 0, 1, 0),
+    'NPC 30': (283, 0, 0, 1, 0),
+    'NPC 31': (283, 0, 0, 1, 0),
+    'NPC 32': (283, 0, 0, 1, 0),
+    'NPC 33': (283, 0, 0, 1, 0),
+    'NPC 34': (283, 0, 0, 1, 0),
+    'NPC 35': (283, 0, 0, 1, 0),
+    'NPC 36': (283, 0, 0, 1, 0),
+    'NPC 37': (283, 0, 0, 1, 0),
+    'NPC 38': (283, 0, 0, 1, 0),
+    'NPC 39': (283, 0, 0, 1, 0),
+    'NPC 40': (283, 0, 0, 1, 0),
+    'NPC 41': (283, 0, 0, 1, 0),
+    'NPC 42': (283, 0, 0, 1, 0),
+    'NPC 43': (283, 0, 0, 1, 0),
+    'NPC 44': (283, 0, 0, 1, 0),
+    'NPC 45': (283, 0, 0, 1, 0),
+    'NPC 46': (283, 0, 0, 1, 0),
+    'NPC 47': (283, 0, 0, 1, 0),
+    'NPC 48': (283, 0, 0, 1, 0),
+    'NPC 49': (283, 0, 0, 1, 0),
+    'NPC 50': (283, 0, 0, 1, 0),
+    'NPC 51': (283, 0, 0, 1, 0),
+    'NPC 52': (283, 0, 0, 1, 0),
+    'NPC 53': (283, 0, 0, 1, 0),
+    'NPC 54': (283, 0, 0, 1, 0),
+    'NPC 55': (283, 0, 0, 1, 0),
+    'NPC 56': (283, 0, 0, 1, 0),
+    'NPC 57': (283, 0, 0, 1, 0),
+    'NPC 58': (283, 0, 0, 1, 0),
+    'NPC 59': (283, 0, 0, 1, 0),
+    'NPC 60': (283, 0, 0, 1, 0),
+    'NPC 61': (283, 0, 0, 1, 0),
+    'NPC 62': (283, 0, 0, 1, 0),
+    'NPC 63': (283, 0, 0, 1, 0),
+    'NPC 64': (283, 0, 0, 1, 0),
+    'NPC 65': (283, 0, 0, 1, 0),
+    'NPC 66': (283, 0, 0, 1, 0),
+    'NPC 67': (283, 0, 0, 1, 0),
+    'NPC 68': (283, 0, 0, 1, 0),
+    'NPC 69': (283, 0, 0, 1, 0),
 
-    'Bouncy Ring 0': (1417, 0, 0, 1),
-    'Bell 0': (1151, 0, 0, 0),
-    'Warp Symbol 0': (11964, 0, 0, 1), # warp scribblings (twilight zone)
-    'Warp Symbol 1': (11964, 0, 0, 1), # warp scribblings (outside world)
-    'Save Point 0': (178, 0, -16, 1),
+    'Orb 0': (296, 0, 0, 1, 0),              # red orb
+    'Orb 1': (290, 0, 0, 1, 0),              # green orb
+    'Orb 2': (295, 0, 0, 1, 0),              # blue orb
+    'Orb 3': (892, 0, 0, 1, 0),              # white orb
+    'Orb 4': (2606, 0, 0, 1, 0),             # yellow orb
+    'Orb 5': (2084, 0, 0, 1, 0),             # pink orb
 
-    'Green Switch 0': (1400, 0, 0, 1), # green block button
-    'Time Block 0': (706, 0, 0, 1),  # green block, standard variant
-    'Time Block 1': (706, 0, 0, 1),  # green block, rare variant
+    'Item 0': (195, 0, 0, 1, 0),
+    'Bouncy Ring 0': (1417, 0, 0, 1, 0),
+    'Bell 0': (1151, 0, 0, 0, 0),
+    # 'Water 0': (15404, 6, -6, 0, 0),       # water pillar
+    # 'Water 1': (15404, 6, -6, 0, 0),       # water pillar
+    # 'Water 2': (15404, 6, -6, 0, 0),       # water surface
+    'Warp Symbol 0': (11964, 0, 0, 1, 0),    # warp scribblings (twilight zone)
+    'Warp Symbol 1': (11964, 0, 0, 1, 0),    # warp scribblings (outside world)
+    'Save Point 0': (178, 0, -16, 1, 0),
 
-    'Blue Switch 0': (1109, 0, 0, 1),  # blue block button
-    'Switch Block 0': (1143, 0, 0, 1), # blue block
+    'Green Switch 0': (1400, 0, 0, 1, 0),    # green block button
+    'Green Switch 1': (1400, 0, 0, 1, 90),   # green block button on right wall
+    'Green Switch 3': (1400, 0, 0, 1, -90),  # green block button on left wall
+    'Time Block 0': (706, 0, 0, 1, 0),       # green block, standard variant
+    'Time Block 1': (706, 0, 0, 1, 0),       # green block, rare variant
 
-    'Red Switch 0': (887, 0, 0, 1),  # red block button
-    'Switch Block 1': (1140, 0, 0, 1), # red block
+    'Blue Switch 0': (1109, 0, 0, 1, 0),     # blue block button
+    'Blue Switch 1': (1109, 0, 0, 1, 90),    # blue block button on right wall
+    'Blue Switch 3': (1109, 0, 0, 1, -90),   # blue block button on right wall
+    'Switch Block 0': (1140, 0, 0, 1, 0),    # blue block
 
-    'Grey Switch 0': (1403, 0, 20, 1), # grey door button
-    'Door 0': (1404, -12, -32, 1),  # grey door
-    'Door 1': (1600, -12, -32, 1),  # red door
-    'Door 2': (2062, -12, -32, 1),  # green door
-    'Door 3': (1601, -12, -32, 1),  # bell door
+    'Red Switch 0': (887, 0, 0, 1, 0),       # red block button
+    'Red Switch 1': (887, 0, 0, 1, 90),      # red block button on right wall
+    'Red Switch 3': (887, 0, 0, 1, -90),     # red block button on right wall
+    'Switch Block 1': (1143, 0, 0, 1, 0),    # red block
 
-    'Lava 0': (18160, 0, 2, 0),  # horizontal lava, upper layer
-    'Lava 1': (23065, -6, -6, 0),  # horizontal lava, lower layer
-    'Lava 2': (18370, 8, 0, 0),  # lava pillar
-    'Lava 3': (18379, 0, 0, 0),  # lava pillar end
-    'Lava 4': (18478, 0, 0, 0),  # lava pillar start (from left)
-    'Lava 5': (18572, 0, 0, 0),  # lava pillar start (from right)
+    'Grey Switch 0': (1403, 0, 20, 1, 0),    # grey door button
+    'Door 0': (1404, -12, -32, 1, 0),        # grey door
+    'Door 1': (1600, -12, -32, 1, 0),        # red door
+    'Door 2': (2062, -12, -32, 1, 0),        # green door
+    'Door 3': (1601, -12, -32, 1, 0),        # bell door
 
-    'Slime 0': (3251, 0, 2, 0),  # horizontal slime, upper layer
-    'Slime 1': (23061, -6, -6, 0),  # horizontal slime, lower layer
-    'Slime 2': (3861, -8, 0, 0),  # slime pillar
-    'Slime 3': (3722, 0, 0, 0),  # horizontal slime corner, \
-    'Slime 4': (3738, 0, 0, 0),  # horizontal slime corner, /
-    'Slime 5': (3589, 0, 0, 0),  # slime fountain
+    'Lava 0': (18160, 0, 2, 0, 0),           # horizontal lava, upper layer
+    'Lava 1': (23065, -6, -6, 0, 0),         # horizontal lava, lower layer
+    'Lava 2': (18370, 8, 0, 0, 0),           # lava pillar
+    'Lava 3': (18379, 0, 0, 0, 0),           # lava pillar end
+    'Lava 4': (18478, 0, 0, 0, 0),           # lava pillar start (from left)
+    'Lava 5': (18572, 0, 0, 0, 0),           # lava pillar start (from right)
+    'Dropper 0': (18686, 0, 0, 1, 0),        # dripping lava
+
+    'Slime 0': (3251, 0, 2, 0, 0),           # horizontal slime, upper layer
+    'Slime 1': (23061, -6, -6, 0, 0),        # horizontal slime, lower layer
+    'Slime 2': (3861, -8, 0, 0, 0),          # slime pillar
+    'Slime 3': (3722, 0, 0, 0, 0),           # horizontal slime corner, \
+    'Slime 4': (3738, 0, 0, 0, 0),           # horizontal slime corner, /
+    'Slime 5': (3589, 0, 0, 0, 0),           # slime fountain
+
+    'Dropper 1': (646, 0, 0, 1, 0),          # harmless drop?
+    'Dropper 2': (646, 0, 0, 1, 0),          # harmless drop?
 }
 
 
@@ -216,12 +243,14 @@ def _read_object_image(game_dir: str, name: str) -> ImageObj:
 @util.memoize
 def _create_sprite_image(
         sprites: data.SpriteArchive,
-        sprite_id: Union[int, Color]) -> ImageObj:
+        sprite_id: Union[int, Color],
+        rotation: int) -> ImageObj:
     if type(sprite_id) is int:
         content = sprites.read(sprite_id)
-        return Image.open(io.BytesIO(content)).convert('RGBA')
+        ret = Image.open(io.BytesIO(content)).convert('RGBA')
     else:
-        return _create_solid_tile_image(sprite_id)
+        ret = _create_solid_tile_image(sprite_id)
+    return ret.rotate(rotation, expand=True)
 
 
 def _create_solid_tile_image(color: Color) -> ImageObj:
@@ -328,7 +357,7 @@ def _render_sprites(
         sprites: data.SpriteArchive,
         layer_to_draw: int) -> None:
     for room_x, room_y in util.range2d(ROOM_WIDTH, ROOM_HEIGHT):
-        for sprite_id, offset_x, offset_y, layer in [
+        for sprite_id, offset_x, offset_y, layer, rotation in [
                 SPRITE_DEFINITIONS[sprite['Sprite']]
                 for key, sprite in room_data.sprites.items()
                 if key != 'Null Sprite'
@@ -340,7 +369,7 @@ def _render_sprites(
                 and int(sprite['Y']) == room_y]:
             if layer != layer_to_draw:
                 continue
-            sprite_image = _create_sprite_image(sprites, sprite_id)
+            sprite_image = _create_sprite_image(sprites, sprite_id, rotation)
             room_image.paste(
                 sprite_image,
                 (
