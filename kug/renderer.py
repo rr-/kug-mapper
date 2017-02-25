@@ -206,6 +206,19 @@ def _get_room_name(x: int, y: int) -> str:
     return _get_room_name_x(x) + _get_room_name_y(y)
 
 
+def _darken_image(image: ImageObj, coeff: float) -> ImageObj:
+    coefficients = (coeff, coeff, coeff, 1)
+    return Image.merge(
+        'RGBA',
+        [
+            ImageMath.eval(
+                'convert(convert(image, "F") * coeff, "L")',
+                image=band,
+                coeff=coefficients[i])
+            for i, band in enumerate(image.split())
+        ])
+
+
 @util.memoize
 def _read_tile_set_image(game_dir: str, name: str) -> ImageObj:
     tile_set_path = os.path.join(game_dir, 'Tilesets', name + '.png')
@@ -224,14 +237,20 @@ def _read_tile_set_image(game_dir: str, name: str) -> ImageObj:
 
 
 @util.memoize
-def _read_tile_image(game_dir: str, name: str, x: int, y: int) -> ImageObj:
-    return (
+def _read_tile_image(
+        game_dir: str,
+        name: str,
+        x: int,
+        y: int,
+        darken_coefficient: float) -> ImageObj:
+    return _darken_image(
         _read_tile_set_image(game_dir, name)
         .crop((
             x * TILE_FULL_WIDTH,
             y * TILE_FULL_HEIGHT,
             (x + 1) * TILE_FULL_WIDTH,
-            (y + 1) * TILE_FULL_HEIGHT)))
+            (y + 1) * TILE_FULL_HEIGHT)),
+        darken_coefficient)
 
 
 @util.memoize
@@ -253,6 +272,7 @@ def _create_sprite_image(
     return ret.rotate(rotation, expand=True)
 
 
+@util.memoize
 def _create_solid_tile_image(color: Color) -> ImageObj:
     image = Image.new(
         mode='RGBA',
@@ -303,7 +323,6 @@ def _render_tiles(
         room_image: ImageObj,
         room_data: data.Room,
         tiles_opacity: float) -> None:
-    black_image = _create_solid_tile_image((0, 0, 0, 255))
     tile_set_names = [
         room_data.tiles['General']['Tileset %d' % i] for i in range(3)]
 
@@ -325,7 +344,8 @@ def _render_tiles(
                 room_data.world.game_dir,
                 tile_set_names[tile_set_index],
                 tile_set_x,
-                tile_set_y))
+                tile_set_y,
+                tiles_opacity))
 
         room_image.paste(
             tile_image,
@@ -334,21 +354,6 @@ def _render_tiles(
                 room_y * TILE_HEIGHT - TILE_BORDER_HEIGHT,
             ),
             tile_image)
-        room_image.paste(
-            black_image,
-            (
-                room_x * TILE_WIDTH - TILE_BORDER_WIDTH,
-                room_y * TILE_HEIGHT - TILE_BORDER_HEIGHT,
-            ),
-            Image.merge(
-                'RGBA',
-                [
-                    ImageMath.eval(
-                        'convert(convert(image, "F") * coeff, "L")',
-                        image=band,
-                        coeff=tiles_opacity)
-                    for i, band in enumerate(tile_image.split())
-                ]))
 
 
 def _render_sprites(
