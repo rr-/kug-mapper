@@ -273,7 +273,7 @@ def _render_backgrounds(
 def _render_tiles(
         room_image: ImageObj,
         room_data: data.Room,
-        mask_tiles: bool) -> None:
+        tiles_opacity: float) -> None:
     black_image = _create_solid_tile_image((0, 0, 0, 255))
     tile_set_names = [
         room_data.tiles['General']['Tileset %d' % i] for i in range(3)]
@@ -299,12 +299,27 @@ def _render_tiles(
                 tile_set_y))
 
         room_image.paste(
-            black_image if mask_tiles else tile_image,
+            tile_image,
             (
                 room_x * TILE_WIDTH - TILE_BORDER_WIDTH,
                 room_y * TILE_HEIGHT - TILE_BORDER_HEIGHT,
             ),
             tile_image)
+        room_image.paste(
+            black_image,
+            (
+                room_x * TILE_WIDTH - TILE_BORDER_WIDTH,
+                room_y * TILE_HEIGHT - TILE_BORDER_HEIGHT,
+            ),
+            Image.merge(
+                'RGBA',
+                [
+                    ImageMath.eval(
+                        'convert(convert(image, "F") * coeff, "L")',
+                        image=band,
+                        coeff=tiles_opacity)
+                    for i, band in enumerate(tile_image.split())
+                ]))
 
 
 def _render_sprites(
@@ -339,7 +354,8 @@ def _render_objects(
         room_image: ImageObj,
         room_data: data.Room,
         world: data.World,
-        object_whitelist: List[str],
+        objects_opacity: float,
+        objects_whitelist: List[str],
         layers: Any) -> None:
 
     def get_layer(object):
@@ -361,7 +377,7 @@ def _render_objects(
         for obj in room_data.objects.values()
         if 'Object' in obj
         and obj['Object'] in world.objects
-        and (object_whitelist is None or obj['Object'] in object_whitelist)
+        and (objects_whitelist is None or obj['Object'] in objects_whitelist)
         and 'X' in obj
         and 'Y' in obj]
     objects = sorted(objects, key=get_layer)
@@ -381,6 +397,7 @@ def _render_objects(
             alpha = 255 - (_parse_float(world_obj['Transparency Max']) or 0)
         else:
             alpha = 255
+        alpha *= objects_opacity
         coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
         flip = bool(obj.get('Flip', False))
         color = (*_to_rgb(coeff), alpha)
@@ -565,8 +582,9 @@ def render_world(
         world: data.World,
         sprites: data.SpriteArchive,
         backgrounds_opacity: float,
-        object_whitelist: List[str],
-        mask_tiles: bool,
+        objects_opacity: float,
+        objects_whitelist: List[str],
+        tiles_opacity: float,
         geometry: Optional[util.Geometry]):
     if not geometry:
         geometry = util.Geometry(0, 0, world.width - 1, world.height - 1)
@@ -585,19 +603,13 @@ def render_world(
         if backgrounds_opacity:
             _render_backgrounds(room_image, room_data, backgrounds_opacity)
         _render_objects(
-            room_image,
-            room_data,
-            world,
-            object_whitelist,
-            range(0, 7))
+            room_image, room_data, world, objects_opacity, None, range(0, 7))
         _render_sprites(room_image, room_data, sprites, 0)
-        _render_tiles(room_image, room_data, mask_tiles)
+        _render_tiles(room_image, room_data, tiles_opacity)
         _render_objects(
-            room_image,
-            room_data,
-            world,
-            object_whitelist,
-            range(7, 999))
+            room_image, room_data, world, objects_opacity, None, range(7, 999))
+        _render_objects(
+            room_image, room_data, world, 1.0, objects_whitelist, range(999))
         _render_sprites(room_image, room_data, sprites, 1)
         _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
         _render_room_name(room_image, room_data)

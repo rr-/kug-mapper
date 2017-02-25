@@ -22,11 +22,13 @@ def parse_args() -> argparse.Namespace:
     add_boolean_option('--render-backgrounds', dest='render_backgrounds')
     add_boolean_option('--render-objects', dest='render_objects')
     add_boolean_option('--mask-tiles', dest='mask_tiles')
+    add_boolean_option('--dim', dest='dim')
 
     parser.set_defaults(
         render_backgrounds=False,
         render_objects=False,
-        mask_tiles=True)
+        mask_tiles=True,
+        dim=False)
     return parser.parse_args()
 
 
@@ -39,6 +41,7 @@ def main() -> None:
     mask_tiles: bool = args.mask_tiles
     scale: int = args.scale
     output_path: str = args.output_path
+    dim: bool = args.dim
 
     sprites = data_reader.read_sprites(game_dir)
     world = data_reader.read_world(game_dir, geometry)
@@ -49,7 +52,9 @@ def main() -> None:
         geometry.max_y = min(world.height - 1, geometry.max_y)
 
     if render_backgrounds:
-        if render_objects:
+        if dim:
+            backgrounds_opacity = 0.5
+        elif render_objects:
             backgrounds_opacity = 1.0
         else:
             backgrounds_opacity = 0.5
@@ -57,21 +62,35 @@ def main() -> None:
         backgrounds_opacity = 0.0
 
     if render_objects:
-        object_whitelist = None
+        if dim:
+            objects_opacity = 0.3
+        else:
+            objects_opacity = 1.0
     else:
-        object_whitelist = [
-            'Kill Area 0',
-            'Kill Area 1',
-            'Kill Area 2',
-            'Fast Travel Sign 0',
-        ]
+        objects_opacity = 0.0
+
+    if not mask_tiles:
+        if dim:
+            tiles_opacity = 0.3
+        else:
+            tiles_opacity = 1.0
+    else:
+        tiles_opacity = 0.0
+
+    objects_whitelist = [
+        'Kill Area 0',
+        'Kill Area 1',
+        'Kill Area 2',
+        'Fast Travel Sign 0',
+    ]
 
     map_image = renderer.render_world(
         world,
         sprites,
         backgrounds_opacity,
-        object_whitelist,
-        mask_tiles,
+        objects_opacity,
+        objects_whitelist,
+        tiles_opacity,
         geometry)
 
     (
