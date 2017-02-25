@@ -592,7 +592,7 @@ def _create_room_image() -> ImageObj:
 
 
 def _get_warp_data(world: data.World) -> Tuple[WarpDict, WarpDict]:
-    regex = r'room_set\((\d+),\s*(\d+)\)'
+    regex = r'(?:twilight_entrypoint|room_set)\((\d+),\s*(\d+)\)'
     outgoing_warps: WarpDict = {}
     incoming_warps: WarpDict = {}
     for world_x, world_y in util.range2d(
