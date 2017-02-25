@@ -307,6 +307,8 @@ def _render_backgrounds(
         room_image: ImageObj,
         room_data: data.Room,
         opacity: float) -> None:
+    if not opacity:
+        return
     color1 = _to_rgb(int(room_data.settings['General']['Gradient Top']))
     color2 = _to_rgb(int(room_data.settings['General']['Gradient Bottom']))
     draw = ImageDraw.Draw(room_image)
@@ -322,7 +324,7 @@ def _render_backgrounds(
 def _render_tiles(
         room_image: ImageObj,
         room_data: data.Room,
-        tiles_opacity: float) -> None:
+        opacity: float) -> None:
     tile_set_names = [
         room_data.tiles['General']['Tileset %d' % i] for i in range(3)]
 
@@ -345,7 +347,7 @@ def _render_tiles(
                 tile_set_names[tile_set_index],
                 tile_set_x,
                 tile_set_y,
-                tiles_opacity))
+                opacity))
 
         room_image.paste(
             tile_image,
@@ -388,9 +390,11 @@ def _render_objects(
         room_image: ImageObj,
         room_data: data.Room,
         world: data.World,
-        objects_opacity: float,
-        objects_whitelist: List[str],
+        opacity: float,
+        whitelist: List[str],
         layers: Any) -> None:
+    if not opacity:
+        return
 
     def get_layer(object):
         try:
@@ -401,7 +405,8 @@ def _render_objects(
             if (ret is None
                     and 'Object' in object
                     and object['Object'] in world.objects):
-                ret = _parse_float(world.objects[object['Object']].get('Layer'))
+                ret = _parse_float(
+                    world.objects[object['Object']].get('Layer'))
             return ret or default
         except:
             return default
@@ -414,7 +419,7 @@ def _render_objects(
         and 'X' in obj
         and 'Y' in obj
         and obj['Object'] in world.objects
-        and (objects_whitelist is None or obj['Object'] in objects_whitelist)]
+        and (whitelist is None or obj['Object'] in whitelist)]
     objects = sorted(objects, key=get_layer)
 
     for obj in objects:
@@ -432,7 +437,7 @@ def _render_objects(
             alpha = 255 - (_parse_float(world_obj['Transparency Max']) or 0)
         else:
             alpha = 255
-        alpha *= objects_opacity
+        alpha *= opacity
         coeff = int(obj.get('RGB Coefficient', 0xFFFFFF))
         flip = bool(obj.get('Flip', False))
         color = (*_to_rgb(coeff), alpha)
@@ -635,20 +640,29 @@ def render_world(
         room_image = _create_room_image()
         room_data = world[world_x, world_y]
 
-        if backgrounds_opacity:
-            _render_backgrounds(room_image, room_data, backgrounds_opacity)
+        # background
+        _render_backgrounds(room_image, room_data, backgrounds_opacity)
+
+        # stuff under blocks
         _render_objects(
             room_image, room_data, world, objects_opacity, None, range(0, 7))
         _render_sprites(room_image, room_data, sprites, 0)
+
+        # blocks
         _render_tiles(room_image, room_data, tiles_opacity)
+
+        # stuff above blocks
         _render_objects(
             room_image, room_data, world, objects_opacity, None, range(7, 999))
         _render_objects(
             room_image, room_data, world, 1.0, objects_whitelist, range(999))
         _render_sprites(room_image, room_data, sprites, 1)
+
+        # mapper stuff
         _render_warps(room_image, room_data, outgoing_warps, incoming_warps)
         _render_room_name(room_image, room_data)
 
+        # put the room onto the map
         map_image.paste(
             room_image,
             (
