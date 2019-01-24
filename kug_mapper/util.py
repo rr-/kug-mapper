@@ -1,8 +1,9 @@
 import os
 import re
 import string
+from typing import Any, Iterator, List, Optional, Tuple
+
 from progress.bar import Bar
-from typing import Iterator, Optional, Any, Tuple, List
 
 
 class Geometry:

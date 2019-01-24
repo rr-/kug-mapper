@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-import os
 import argparse
+import os
+
 from PIL import Image
-from kug_mapper import util, data_reader, renderer
+
+from kug_mapper import data_reader, renderer, util
 
 
 def parse_args() -> argparse.Namespace:

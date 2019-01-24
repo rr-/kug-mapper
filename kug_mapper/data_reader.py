@@ -1,9 +1,9 @@
 import io
 import os
 import re
-from kug_mapper import binary, data, util
-from typing import Optional, Tuple, Dict, Iterator
+from typing import Dict, Iterator, Optional, Tuple
 
+from kug_mapper import binary, data, util
 
 _DATA_NAME_REGEX = r'(\d+),(\d+) (\w+)'
 

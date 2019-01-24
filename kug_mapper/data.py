@@ -1,5 +1,6 @@
 import io
-from typing import Any, Optional, Tuple, List, Dict
+from typing import Any, Dict, List, Optional, Tuple
+
 from kug_mapper import binary, util
 
 

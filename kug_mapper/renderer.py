@@ -1,13 +1,14 @@
-import os
-import sys
 import io
-import re
 import math
+import os
 import random
-from typing import Any, Optional, Union, Tuple, Set, List, Dict
-from PIL import Image, ImageFont, ImageDraw, ImageMath
-from kug_mapper import data, util
+import re
+import sys
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+from PIL import Image, ImageDraw, ImageFont, ImageMath
+
+from kug_mapper import data, util
 
 ImageObj = Any
 Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
