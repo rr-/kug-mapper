@@ -379,7 +379,7 @@ def _render_objects(
     room_data: data.Room,
     world: data.World,
     opacity: float,
-    whitelist: T.List[str],
+    whitelist: T.Optional[T.List[str]],
     layers: T.Any,
 ) -> None:
     if not opacity:
@@ -653,7 +653,7 @@ def render_world(
 
         # stuff under blocks
         _render_objects(
-            room_image, room_data, world, objects_opacity, [], range(0, 7)
+            room_image, room_data, world, objects_opacity, None, range(0, 7)
         )
         _render_sprites(room_image, room_data, sprites, 0)
 
@@ -662,7 +662,7 @@ def render_world(
 
         # stuff above blocks
         _render_objects(
-            room_image, room_data, world, objects_opacity, [], range(7, 999)
+            room_image, room_data, world, objects_opacity, None, range(7, 999)
         )
         _render_objects(
             room_image, room_data, world, 1.0, objects_whitelist, range(999)
