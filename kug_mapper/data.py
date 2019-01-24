@@ -8,25 +8,26 @@ class SpriteArchive:
     def __init__(self, path: str, offsets: T.Dict[int, int]) -> None:
         self._offsets = offsets
         self._path = path
-        with open(path, 'rb') as handle:
+        with open(path, "rb") as handle:
             handle.seek(0, io.SEEK_END)
             file_size = handle.tell()
             self._all_offsets = list(
-                sorted(list(offsets.values()) + [file_size]))
+                sorted(list(offsets.values()) + [file_size])
+            )
 
     def __len__(self) -> int:
         return len(self._offsets)
 
     def read(self, index: int) -> bytes:
         offset = self._offsets[index]
-        with open(self._path, 'rb') as handle:
+        with open(self._path, "rb") as handle:
             handle.seek(offset + 16)
             size = [x for x in self._all_offsets if x > offset][0] - offset
             return handle.read(size)
 
 
 class Room:
-    def __init__(self, world: 'World', x: int, y: int) -> None:
+    def __init__(self, world: "World", x: int, y: int) -> None:
         self.world = world
         self.x: int = x
         self.y: int = y

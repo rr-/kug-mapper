@@ -38,22 +38,23 @@ def scan_tree(path: str) -> T.Iterable[os.DirEntry]:
 
 
 def parse_coord(input: str) -> T.Tuple[int, int]:
-    match = re.match('(\d+),(\d+)', input)
+    match = re.match("(\d+),(\d+)", input)
     if match:
         return int(match.group(1)), int(match.group(2))
-    match = re.match('([a-zA-Z]+)(\d+)', input)
+    match = re.match("([a-zA-Z]+)(\d+)", input)
     if match:
         return (
             spreadsheet_notation_to_number(match.group(1)) - 1,
-            int(match.group(2)) - 1)
-    raise ValueError('Invalid coordinate')
+            int(match.group(2)) - 1,
+        )
+    raise ValueError("Invalid coordinate")
 
 
 def parse_geometry(input: str) -> T.Optional[Geometry]:
-    if not input or input == '*':
+    if not input or input == "*":
         return None
-    if ':' in input:
-        min_coord, max_coord = input.split(':')
+    if ":" in input:
+        min_coord, max_coord = input.split(":")
         min_x, min_y = parse_coord(min_coord)
         max_x, max_y = parse_coord(max_coord)
         return Geometry(min_x, min_y, max_x, max_y)
@@ -63,7 +64,7 @@ def parse_geometry(input: str) -> T.Optional[Geometry]:
 
 
 def number_to_spreadsheet_notation(num: int) -> str:
-    ret = ''
+    ret = ""
     alphabet = string.ascii_uppercase
     while num:
         mod = (num - 1) % 26
