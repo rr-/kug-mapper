@@ -4,16 +4,16 @@ import os
 import random
 import re
 import sys
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+import typing as T
 
 from PIL import Image, ImageDraw, ImageFont, ImageMath
 
 from kug_mapper import data, util
 
-ImageObj = Any
-Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
-Coord = Tuple[int, int]
-WarpDict = Dict[Coord, List[Coord]]
+ImageObj = T.Any
+Color = T.Union[T.Tuple[int, int, int],T. Tuple[int, int, int, int]]
+Coord = T.Tuple[int, int]
+WarpDict = T.Dict[Coord, T.List[Coord]]
 
 ROOM_WIDTH = 31
 ROOM_HEIGHT = 18
@@ -188,7 +188,7 @@ SPRITE_DEFINITIONS = {
 }
 
 
-def _parse_float(x: Any) -> Optional[float]:
+def _parse_float(x: T.Any) -> T.Optional[float]:
     try:
         return float(re.sub(r'[^\d\.]', '', str(x).replace(',', '.')))
     except ValueError:
@@ -263,9 +263,9 @@ def _read_object_image(game_dir: str, name: str) -> ImageObj:
 @util.memoize
 def _create_sprite_image(
         sprites: data.SpriteArchive,
-        sprite_id: Union[int, Color],
+        sprite_id: T.Union[int, Color],
         rotation: int) -> ImageObj:
-    if type(sprite_id) is int:
+    if isinstance(sprite_id, int):
         content = sprites.read(sprite_id)
         ret = Image.open(io.BytesIO(content)).convert('RGBA')
     else:
@@ -392,12 +392,12 @@ def _render_objects(
         room_data: data.Room,
         world: data.World,
         opacity: float,
-        whitelist: List[str],
-        layers: Any) -> None:
+        whitelist: T.List[str],
+        layers: T.Any) -> None:
     if not opacity:
         return
 
-    def get_layer(object):
+    def get_layer(object: T.Dict[str, T.Any]) -> float:
         try:
             default = 0
             ret = None
@@ -592,7 +592,7 @@ def _create_room_image() -> ImageObj:
         color=DEFAULT_BACKGROUND)
 
 
-def _get_warp_data(world: data.World) -> Tuple[WarpDict, WarpDict]:
+def _get_warp_data(world: data.World) -> T.Tuple[WarpDict, WarpDict]:
     regex = r'(?:twilight_entrypoint|room_set)\((\d+),\s*(\d+)\)'
     outgoing_warps: WarpDict = {}
     incoming_warps: WarpDict = {}
@@ -613,7 +613,7 @@ def _get_warp_data(world: data.World) -> Tuple[WarpDict, WarpDict]:
 
 
 def _report_unknown_sprites(
-        known_names: Set[str], all_names: Set[str]) -> None:
+        known_names: T.Set[str], all_names: T.Set[str]) -> None:
     for name in sorted(all_names):
         if name not in known_names:
             print('Skipped sprite %s' % name, file=sys.stderr)
@@ -624,9 +624,9 @@ def render_world(
         sprites: data.SpriteArchive,
         backgrounds_opacity: float,
         objects_opacity: float,
-        objects_whitelist: List[str],
+        objects_whitelist: T.List[str],
         tiles_opacity: float,
-        geometry: Optional[util.Geometry]):
+        geometry: T.Optional[util.Geometry]) -> Image:
     if not geometry:
         geometry = util.Geometry(0, 0, world.width - 1, world.height - 1)
 
@@ -646,7 +646,7 @@ def render_world(
 
         # stuff under blocks
         _render_objects(
-            room_image, room_data, world, objects_opacity, None, range(0, 7))
+            room_image, room_data, world, objects_opacity, [], range(0, 7))
         _render_sprites(room_image, room_data, sprites, 0)
 
         # blocks
@@ -654,7 +654,7 @@ def render_world(
 
         # stuff above blocks
         _render_objects(
-            room_image, room_data, world, objects_opacity, None, range(7, 999))
+            room_image, room_data, world, objects_opacity, [], range(7, 999))
         _render_objects(
             room_image, room_data, world, 1.0, objects_whitelist, range(999))
         _render_sprites(room_image, room_data, sprites, 1)

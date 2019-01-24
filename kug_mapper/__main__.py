@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import typing as T
 
 from PIL import Image
 
@@ -24,7 +25,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     game_dir: str = os.path.expanduser(args.game_dir)
-    geometry: util.Geometry = util.parse_geometry(args.geometry)
+    geometry: T.Optional[util.Geometry] = util.parse_geometry(args.geometry)
     backgrounds_opacity: float = args.backgrounds_opacity
     objects_opacity: float = args.objects_opacity
     tiles_opacity: float = args.tiles_opacity

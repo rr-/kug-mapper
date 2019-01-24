@@ -1,7 +1,7 @@
 import os
 import re
 import string
-from typing import Any, Iterator, List, Optional, Tuple
+import typing as T
 
 from progress.bar import Bar
 
@@ -14,11 +14,11 @@ class Geometry:
         self.max_y = max_y
 
 
-def progress(what: Any) -> Any:
+def progress(what: T.Any) -> T.Any:
     return Bar().iter(list(what))
 
 
-def range2d(*args: int) -> Iterator[Tuple[int, int]]:
+def range2d(*args: int) -> T.Iterable[T.Tuple[int, int]]:
     if len(args) == 2:
         min_x = min_y = 0
         max_x, max_y = args
@@ -29,7 +29,7 @@ def range2d(*args: int) -> Iterator[Tuple[int, int]]:
             yield (x, y)
 
 
-def scan_tree(path):
+def scan_tree(path: str) -> T.Iterable[os.DirEntry]:
     for entry in os.scandir(path):
         if entry.is_dir(follow_symlinks=False):
             yield from scan_tree(entry.path)
@@ -37,7 +37,7 @@ def scan_tree(path):
             yield entry
 
 
-def parse_coord(input: str) -> Tuple[int, int]:
+def parse_coord(input: str) -> T.Tuple[int, int]:
     match = re.match('(\d+),(\d+)', input)
     if match:
         return int(match.group(1)), int(match.group(2))
@@ -49,7 +49,7 @@ def parse_coord(input: str) -> Tuple[int, int]:
     raise ValueError('Invalid coordinate')
 
 
-def parse_geometry(input: str) -> Optional[Geometry]:
+def parse_geometry(input: str) -> T.Optional[Geometry]:
     if not input or input == '*':
         return None
     if ':' in input:
@@ -82,10 +82,10 @@ def spreadsheet_notation_to_number(input: str) -> int:
     return ret
 
 
-def memoize(f):
-    results = {}
+def memoize(f: T.Callable[..., T.Any]) -> T.Any:
+    results: T.Dict[T.Tuple[T.Any, ...], T.Any] = {}
 
-    def helper(*args):
+    def helper(*args: T.Any) -> T.Any:
         if args not in results:
             results[args] = f(*args)
         return results[args]

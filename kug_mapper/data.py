@@ -1,11 +1,11 @@
 import io
-from typing import Any, Dict, List, Optional, Tuple
+import typing as T
 
 from kug_mapper import binary, util
 
 
 class SpriteArchive:
-    def __init__(self, path: str, offsets: Dict[int, int]) -> None:
+    def __init__(self, path: str, offsets: T.Dict[int, int]) -> None:
         self._offsets = offsets
         self._path = path
         with open(path, 'rb') as handle:
@@ -30,15 +30,15 @@ class Room:
         self.world = world
         self.x: int = x
         self.y: int = y
-        self.objects: Any = None
-        self.robots: Any = None
-        self.script: Any = None
-        self.settings: Any = None
-        self.sprites: Any = None
-        self.tiles: Any = None
+        self.objects: T.Any = None
+        self.robots: T.Any = None
+        self.script: T.Any = None
+        self.settings: T.Any = None
+        self.sprites: T.Any = None
+        self.tiles: T.Any = None
 
     @property
-    def pos(self) -> Tuple[int, int]:
+    def pos(self) -> T.Tuple[int, int]:
         return (self.x, self.y)
 
 
@@ -49,13 +49,13 @@ class World:
         self.game_dir = game_dir
         self.width = width
         self.height = height
-        self.objects: Optional[Dict] = None
-        self.room_data: Dict[Tuple[int, int], Room] = {}
+        self.objects: T.Optional[T.Dict[str, T.Dict[str, T.Any]]] = None
+        self.room_data: T.Dict[T.Tuple[int, int], Room] = {}
         for x, y in util.range2d(self.width + 1, self.height + 1):
             self.room_data[x, y] = Room(self, x, y)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: T.Tuple[int, int]) -> T.Any:
         return self.room_data[key]
 
-    def __iter__(self):
+    def __iter__(self) -> T.Iterator[Room]:
         return iter(self.room_data.values())
