@@ -2,7 +2,7 @@
 import os
 import argparse
 from PIL import Image
-from kug import util, data_reader, renderer
+from kug_mapper import util, data_reader, renderer
 
 
 def parse_args() -> argparse.Namespace:

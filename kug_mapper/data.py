@@ -1,6 +1,6 @@
 import io
 from typing import Any, Optional, Tuple, List, Dict
-from kug import binary, util
+from kug_mapper import binary, util
 
 
 class SpriteArchive:

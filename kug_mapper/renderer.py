@@ -6,7 +6,7 @@ import math
 import random
 from typing import Any, Optional, Union, Tuple, Set, List, Dict
 from PIL import Image, ImageFont, ImageDraw, ImageMath
-from kug import data, util
+from kug_mapper import data, util
 
 
 ImageObj = Any

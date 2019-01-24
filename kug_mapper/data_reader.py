@@ -1,7 +1,7 @@
 import io
 import os
 import re
-from kug import binary, data, util
+from kug_mapper import binary, data, util
 from typing import Optional, Tuple, Dict, Iterator
 
 
